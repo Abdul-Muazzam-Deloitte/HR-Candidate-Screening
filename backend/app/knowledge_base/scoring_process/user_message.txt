@@ -1,0 +1,35 @@
+ Evaluate the CV against the job description using the following **criteria**, scoring each from 1 (very poor match) to 5 (excellent match):
+ 1. **Technical Skills Match** — Are the tools, languages, platforms, and frameworks used in the CV aligned with those required in the job description?
+ 2. **Relevance of Experience** — Are the candidate’s past roles and responsibilities similar to what the job demands?
+ 3. **Years of Experience** — Does the candidate meet or exceed the experience requirement?
+ 4. **Project/Domain Fit** — Does the candidate have relevant domain experience (e.g., finance, AI, cloud)?
+ 5. **Soft Skills** — Do they demonstrate communication, leadership, adaptability, teamwork, or client collaboration?
+ 6. **Education & Certifications** — Do they meet the academic and certification requirements listed in the JD?
+ 7. **Communication & Formatting** — Is the CV well-written, professional, and easy to follow?
+
+ Return the result in this structured JSON format. Each criterion should include:
+ - A score from 1 to 5
+ - A short explanation for the score
+
+After scoring, determine whether the candidate should proceed to the next step (assessment). Use the following rule:
+ - If the average score is **≥ 4** and overall fit is strong, set `"proceed_to_assessement": "Yes"`
+- Otherwise, set `"proceed_to_assessement": "No"`
+
+Example Output:
+{{
+    "technical_skills": {{"score": 4, "notes": "Strong match in Azure, C#, Angular"}},
+    "experience_relevance": {{"score": 5, "notes": "Worked on similar projects using .NET stack"}},
+    "years_experience": {{"score": 5, "notes": "6+ years meets the requirement"}},
+    "project_fit": {{"score": 4, "notes": "Worked in enterprise apps; no fintech experience"}},
+    "soft_skills": {{"score": 4, "notes": "Shows leadership and cross-functional team collaboration"}},
+    "education_certifications": {{"score": 5, "notes": "MSc in CS + Azure certs"}},
+    "communication": {{"score": 4, "notes": "CV is clear and well-structured"}},
+    "overall_recommendation": "Strong Fit",
+    "proceed_to_assessement": "Yes"
+}}
+
+Job Description:
+{job_description}
+
+Candidate CV (Markdown):
+{candidate_cv_content}

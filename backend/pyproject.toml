@@ -1,0 +1,23 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agentic-doc>=0.2.10",
+    "crawl4ai>=0.6.3",
+    "google-generativeai>=0.8.5",
+    "ipython>=9.4.0",
+    "langchain>=0.3.26",
+    "langchain-community>=0.3.27",
+    "langchain-google-genai>=2.0.10",
+    "langchain-google-vertexai>=2.0.27",
+    "langchain-openai>=0.3.27",
+    "langgraph>=0.5.3",
+    "openai>=1.93.0",
+    "playwright>=1.53.0",
+    "pydantic[email]>=2.11.7",
+    "python-dotenv",
+    "requests",
+]
