@@ -14,7 +14,6 @@ def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
             contents of PDF in markdown format
         """
         try:    
-            
             # Extract candidte info from CV in pdf format using Landing AI
             # filepath: path of CV
             # extraction_model: extract specific data from pdf based on Candidate class        
@@ -28,4 +27,5 @@ def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
             return fields
 
         except Exception as e:
+            print('Error in convert_pdf_to_markdown_landing_ai:', str(e))
             return Candidate()

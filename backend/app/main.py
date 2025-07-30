@@ -4,6 +4,8 @@ from document_extraction.document_extractor import DocumentExtractor
 from llm_handler.llm_handler import ChatCompletionHandler
 from workflow.langgraph_workflow import create_cv_scoring_workflow
 from models.graph_state import CVProcessingState
+from models.candidate_info import Candidate
+from IPython.display import display, Image
 
 load_dotenv(override=True)
 
@@ -24,7 +26,7 @@ def score_cv_vs_job_description():
 
     # Step 2:
     handler = ChatCompletionHandler()
-    return handler.run_chain(system_message, user_message)
+    return handler.run_chain(system_message, user_message,)
 
 def run_cv_scoring_example():
 
@@ -34,15 +36,26 @@ def run_cv_scoring_example():
 
     initial_state = CVProcessingState(
         pdf_path=pdf_path,
-        cv_data=None,
-        score=None,
+        cv_data=Candidate(
+            name="",
+            email="test@test.com",
+            summary="",
+            skills=[],
+            experience=[],
+            education=[],
+            social_links=[],
+            markdown=""
+        ),
+        cv_score=None,
+        social_media_score=None,
+        proceed_interview="",
         messages=[],
-        error=None
+        error=""
     )
 
     try:
         result = workflow.invoke(initial_state)
-        print(result)
+        # print(result)
 
     except Exception as e:
         print(f"❌ Workflow execution failed: {str(e)}")

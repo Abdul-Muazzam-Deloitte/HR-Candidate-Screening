@@ -14,5 +14,11 @@ class CVScore(BaseModel):
     soft_skills: ScoreDetail = Field(description="Soft skills and interpersonal abilities")
     education_certifications: ScoreDetail = Field(description="Education and certifications evaluation")
     communication: ScoreDetail = Field(description="Communication skills based on CV presentation")
-    overall_recommendation: str = Field(description="Overall recommendation: Strong Fit, Good Fit, Moderate Fit, or Poor Fit")
-    proceed_to_assessment: str = Field(description="Decision to proceed: Yes or No")
+    overall_recommendation: str = Field(
+        description="Overall recommendation based on different criteria",
+        pattern="^(Strong Fit|Good Fit|Moderate Fit|Poor Fit)$"
+    )
+    proceed_to_assessment: str = Field(
+        description="Decision to proceed",
+        pattern="^(Yes|No)$"
+    )

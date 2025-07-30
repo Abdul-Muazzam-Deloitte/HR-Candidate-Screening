@@ -21,3 +21,5 @@ dependencies = [
     "python-dotenv",
     "requests",
 ]
+[tool.setuptools.packages.find]
+exclude = ["node_modules*"]

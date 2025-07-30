@@ -2,6 +2,9 @@
 from dotenv import load_dotenv
 import os
 from typing import Dict, Any
+import json
+from models.score_result import CVScore
+from pydantic import BaseModel
 
 # Import Google AI Package
 import google.generativeai
@@ -48,24 +51,31 @@ class ChatCompletionHandler:
             ("human", "{user_message}")
         ])
 
-        self.chain: Runnable = self.prompt_template | self.llm
+        # parser = PydanticOutputParser(pydantic_schema=output_parser)
 
-    def run_chain(self, system_message: str, user_message: str) -> Dict[str, Any]:
+        self.chain: Runnable | None = None
+
+    def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel]):
         """
         Construct the langChain chain to invoke a call to the LLM
 
         Args:
             system_message (str): Description of the system role for the LLM
             user_message (str): Description of the user role for the LLM
+            output_model (pydantic.BaseModel): The Pydantic model class to parse the LLM output.
 
         Returns:
-            response based on the messages
+            Parsed output as an instance of output_model.
         """
-        response = self.chain.invoke({
+
+        chain = self.prompt_template | self.llm.with_structured_output(output_model)
+
+        response = chain.invoke({
             "system_message": system_message,
             "user_message": user_message
         })
-        return response.content
+
+        return response
 
     @staticmethod
     def get_response_gemini(system_message: str, user_message: str) -> str:

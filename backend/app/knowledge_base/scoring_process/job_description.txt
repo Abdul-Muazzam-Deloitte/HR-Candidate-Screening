@@ -1,5 +1,5 @@
 We are seeking a talented and experienced Full Stack Developer to join our dynamic development team.
-### Responsibilities:
+Responsibilities:
 - Design, develop, test, and maintain scalable web applications from frontend to backend.
 - Collaborate with UI/UX designers, product managers, and other developers to deliver high-quality features.
 - Write clean, modular, and well-documented code.
@@ -7,27 +7,27 @@ We are seeking a talented and experienced Full Stack Developer to join our dynam
 - Ensure application security, performance, and responsiveness.
 - Participate in code reviews and agile development processes.
 
-### Required Technical Skills:
-- Proficiency in **JavaScript/TypeScript** and modern frontend frameworks (e.g., **React**, **Angular**, or **Vue.js**).
-- Strong knowledge of **backend development** using **Node.js**, **Python**, **.NET**, or **Java**.
-- Experience with **RESTful APIs**, **GraphQL**, and microservices architecture.
-- Solid understanding of **HTML5**, **CSS3**, and responsive design principles.
-- Experience with **SQL** and **NoSQL databases** (e.g., PostgreSQL, MongoDB).
-- Familiarity with **CI/CD pipelines**, **Git**, and containerization tools (e.g., Docker).
+Required Technical Skills:
+- Proficiency in JavaScript/TypeScript and modern frontend frameworks (e.g., React, Angular, or Vue.js).
+- Strong knowledge of backend development using Node.js, Python, .NET, or Java.
+- Experience with RESTful APIs, GraphQL, and microservices architecture.
+- Solid understanding of HTML5, CSS3, and responsive design principles.
+- Experience with SQL and NoSQL databases (e.g., PostgreSQL, MongoDB).
+- Familiarity with CI/CD pipelines, Git, and containerization tools (e.g., Docker).
 
-### Nice-to-Have Skills:
-- Experience with **cloud platforms** like **AWS**, **Azure**, or **GCP**.
-- Exposure to **DevOps practices** and tools (e.g., Jenkins, Kubernetes).
-- Knowledge of **testing frameworks** (e.g., Jest, Cypress, Mocha).
+Nice-to-Have Skills:
+- Experience with cloud platforms like AWS, Azure, or GCP.
+- Exposure to DevOps practices and tools (e.g., Jenkins, Kubernetes).
+- Knowledge of testing frameworks (e.g., Jest, Cypress, Mocha).
 
-### Soft Skills:
+Soft Skills:
 - Strong problem-solving skills and ability to work independently.
 - Excellent communication and collaboration abilities.
 - Ability to adapt quickly to new technologies and changing requirements.
 
-### Experience:
+Experience:
 - 3+ years of hands-on experience in full stack development roles.
 - Proven track record of shipping production-grade web applications.
 
-### Education:
+Education:
 - Bachelor’s or Master’s degree in Computer Science, Engineering, or related field.
