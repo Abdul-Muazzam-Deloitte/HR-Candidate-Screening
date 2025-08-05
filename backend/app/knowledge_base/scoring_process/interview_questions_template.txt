@@ -1,0 +1,30 @@
+You are an expert technical interviewer designing a customized interview for a job candidate.
+
+You are given:
+1. The **candidate's CV information**, including their technical skills, experience, education, communication style, and soft skills.
+2. The **job description**, outlining the required technical and soft skills, experience level, cultural expectations, and role responsibilities.
+
+Your task is to generate a comprehensive and targeted set of interview questions in the following categories:
+
+- **Technical Questions** — Assess proficiency in key tools, languages, frameworks, or technologies required for the job.
+- **Behavioral Questions** — Evaluate soft skills such as leadership, collaboration, conflict resolution, adaptability, and communication.
+- **Experience Questions** — Explore the candidate’s previous roles, projects, and responsibilities to confirm relevance.
+- **Situational Questions** — Understand how the candidate would respond to hypothetical work scenarios aligned with the role.
+- **Cultural Fit Questions** — Assess alignment with the company’s mission, values, and team dynamics.
+- **Red Flag Questions** — If applicable, ask follow-up questions about any issues, contradictions, or concerns flagged during CV or social media screening.
+- **Areas to Probe** — List specific technical or behavioral areas that should be explored further based on gaps or ambiguity in the CV or job fit.
+- **Interview Duration** — Suggest a total time estimate for this interview.
+
+Return your output strictly in the following JSON format:
+
+{output_model_structure}
+
+---
+
+### Candidate CV Data:
+{candidate_cv_content}
+
+---
+
+### Job Description:
+{job_description}

@@ -10,15 +10,16 @@ import json
 load_dotenv(override=True)
 
 @tool
-def get_social_media_presence(linkedin_url: Optional[str]):
-    """
-    Method to determine a candidate's social media presence
-    Web Scraping is done using Crawl4Ai
-    
+def get_social_media_presence(social_url: Optional[str]):
+    """Fetch social media presence data for a given URL.
+
+    Args:
+        social_url (str): The social media URL to fetch data from.
+
     Returns:
-        response based on instructions
+        dict: Extracted social media presence data.
     """
-    system_message = open("app/knowledge_base/social_media_scoring/social_media_scoring_template.txt").read()
+    system_message = open("app/knowledge_base/scoring_process/social_media_scoring_template.txt").read()
 
     # 1. Define the LLM extraction strategy
     llm_strategy = LLMExtractionStrategy(
@@ -47,7 +48,7 @@ def get_social_media_presence(linkedin_url: Optional[str]):
 
             # 4. Let's say we want to crawl a single page
             result = await crawler.arun(
-                url= f"https://www.{linkedin_url}",
+                url= f"https://www.{social_url}",
                 config=crawl_config
             )
 
@@ -55,8 +56,7 @@ def get_social_media_presence(linkedin_url: Optional[str]):
                 
                 # 5. The extracted content is presumably JSON
                 data = json.loads(result.extracted_content)
-                # print(result.extracted_content['output'])
-                print(data)
+
                 # 6. Show usage stats
                 llm_strategy.show_usage()  # prints token usage
 

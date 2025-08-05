@@ -17,7 +17,7 @@ After scoring, determine whether the candidate should proceed to the next step (
 
 
 IMPORTANT: You must respond with valid JSON that matches this exact structure:
-{scoring_json_format}
+{output_model_structure}
 
 Return only the JSON response without any markdown formatting or additional text.
 

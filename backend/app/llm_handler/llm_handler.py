@@ -35,10 +35,8 @@ google.generativeai.configure()
 class ChatCompletionHandler:
 
     def __init__(self):
-        """
-        Constructor of ChatCompletionHandler class
-        Initialization of llm, prompt_template and chain variables
-        """
+        """Initialize the ChatCompletionHandler with the LLM and prompt template."""
+
         self.llm = ChatOpenAI(
             model=model,
             api_key=google_api_key,
@@ -50,8 +48,6 @@ class ChatCompletionHandler:
             ("system", "{system_message}"),
             ("human", "{user_message}")
         ])
-
-        # parser = PydanticOutputParser(pydantic_schema=output_parser)
 
         self.chain: Runnable | None = None
 
@@ -68,9 +64,9 @@ class ChatCompletionHandler:
             Parsed output as an instance of output_model.
         """
 
-        chain = self.prompt_template | self.llm.with_structured_output(output_model)
+        self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
 
-        response = chain.invoke({
+        response = self.chain.invoke({
             "system_message": system_message,
             "user_message": user_message
         })

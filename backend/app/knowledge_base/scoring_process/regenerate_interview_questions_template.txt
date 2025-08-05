@@ -1,0 +1,49 @@
+You are an expert AI recruiter assistant.
+
+You were previously tasked with generating tailored interview questions for a candidate based on their CV and the job description. However, a validation process has detected some questions that are likely hallucinated or weakly related to the candidate’s profile.
+
+---
+
+## Candidate CV (Markdown Format)
+{candidate_cv_content}
+
+---
+
+## Job Description
+{job_description}
+
+---
+
+## Initial Interview Questions (Grouped by Category)
+{interview_questions}
+
+---
+
+## Flagged as Possibly Hallucinated or Low-Similarity
+These are the questions that failed semantic similarity checks:
+{hallucinated_questions}
+
+---
+
+## Your Task:
+Regenerate a **new set of high-quality interview questions**, ensuring:
+
+- All questions are clearly grounded in both the CV and the job description.
+- Avoid any generic, irrelevant, or hallucinated content.
+- Do **not reuse** any of the flagged hallucinated questions.
+- Keep a balanced coverage across all categories:
+- **Technical Questions** — Assess proficiency in key tools, languages, frameworks, or technologies required for the job.
+- **Behavioral Questions** — Evaluate soft skills such as leadership, collaboration, conflict resolution, adaptability, and communication.
+- **Experience Questions** — Explore the candidate’s previous roles, projects, and responsibilities to confirm relevance.
+- **Situational Questions** — Understand how the candidate would respond to hypothetical work scenarios aligned with the role.
+- **Cultural Fit Questions** — Assess alignment with the company’s mission, values, and team dynamics.
+- **Red Flag Questions** — If applicable, ask follow-up questions about any issues, contradictions, or concerns flagged during CV or social media screening.
+- **Areas to Probe** — List specific technical or behavioral areas that should be explored further based on gaps or ambiguity in the CV or job fit.
+- **Interview Duration** — Suggest a total time estimate for this interview.
+
+
+---
+
+Return your output strictly in the following JSON format:
+
+{output_model_structure}

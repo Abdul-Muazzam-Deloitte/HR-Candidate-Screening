@@ -7,25 +7,27 @@ load_dotenv(override=True)
 
 @tool
 def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
-        """
-        Method to perform PDF agentic document extraction via Landing AI SDK
+    """Extracts candidate information from a PDF using Landing AI.
+
+    Args:
+        pdf_path (str): Path to the candidate's CV in PDF format.
+
+    Returns:
+        Candidate: Extracted candidate information.
+    """ 
+    try:    
+        # Extract candidte info from CV in pdf format using Landing AI
+        # filepath: path of CV
+        # extraction_model: extract specific data from pdf based on Candidate class        
+        parsed_docs = parse(pdf_path, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
+        fields = parsed_docs[0].extraction
+
+        # Return data into JSON
+        # return fields.model_dump()
         
-        Returns:
-            contents of PDF in markdown format
-        """
-        try:    
-            # Extract candidte info from CV in pdf format using Landing AI
-            # filepath: path of CV
-            # extraction_model: extract specific data from pdf based on Candidate class        
-            parsed_docs = parse(pdf_path, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
-            fields = parsed_docs[0].extraction
+        # Return data as Candidate Object
+        return fields
 
-            # Return data into JSON
-            # return fields.model_dump()
-            
-            # Return data as Candidate Object
-            return fields
-
-        except Exception as e:
-            print('Error in convert_pdf_to_markdown_landing_ai:', str(e))
-            return Candidate()
+    except Exception as e:
+        print('Error in convert_pdf_to_markdown_landing_ai:', str(e))
+        return Candidate()

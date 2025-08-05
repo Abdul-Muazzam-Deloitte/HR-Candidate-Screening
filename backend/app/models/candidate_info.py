@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 class Experience(BaseModel):
     """Work experience entry"""
@@ -17,8 +17,8 @@ class Education(BaseModel):
 
 class SocialLinks(BaseModel):
     """Social media links"""
-    platform: Optional[str] = Field(description="Name of the social media platform in candidate's profile")
-    url: Optional[str] = Field(description="Url to the candidate's social profile on the platform")
+    platform: str = Field(description="Name of the social media platform in candidate's profile")
+    url: str = Field(description="Url to the candidate's social profile on the platform")
 
 class Candidate(BaseModel):
 
@@ -33,5 +33,5 @@ class Candidate(BaseModel):
     linkedin_url: Optional[str] = Field(default=None, description="URL to the candidate's LinkedIn profile")
     github_url: Optional[str] = Field(default=None, description="URL to the candidate's Github profile")
     x_url: Optional[str] = Field(default=None, description="URL to the candidate's X/Twitter profile")
-    social_links:Optional[List[SocialLinks]] = Field(description="Social media links pertaining to the candidate")
+    social_links:List[SocialLinks] = Field(description="Social media links pertaining to the candidate")
     markdown: str = Field(description="full contents of pdf in markdown")

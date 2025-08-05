@@ -20,6 +20,7 @@ dependencies = [
     "pydantic[email]>=2.11.7",
     "python-dotenv",
     "requests",
+    "sentence-transformers>=5.0.0",
 ]
 [tool.setuptools.packages.find]
 exclude = ["node_modules*"]

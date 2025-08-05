@@ -18,7 +18,3 @@ class CVScore(BaseModel):
         description="Overall recommendation based on different criteria",
         pattern="^(Strong Fit|Good Fit|Moderate Fit|Poor Fit)$"
     )
-    proceed_to_assessment: str = Field(
-        description="Decision to proceed",
-        pattern="^(Yes|No)$"
-    )
