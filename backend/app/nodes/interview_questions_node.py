@@ -20,13 +20,10 @@ def interview_questions_node(state: CVProcessingState):
                 # return state
                 return {"error": "No cv data available for interview questions."}
             
-            print("interview_questions_node")
             interview_questions_object = generate_interview_questions.invoke({
                 "candidate_cv_content": state["cv_data"].markdown,
                 "job_description": state["job_description"]
             })
-
-            print(interview_questions_object)
 
             if interview_questions_object:
                  
@@ -36,11 +33,10 @@ def interview_questions_node(state: CVProcessingState):
                         "candidate_cv_content" : state["cv_data"].markdown,
                         "job_description" : state["job_description"]
                     })
-
-                    print(f"Hallucinated questions: {hallucinated}")
-                                                                            
+                                                                                
                     if not hallucinated:
-                        return interview_questions_object
+                        print(interview_questions_object)
+                        return {"interview_questions" : interview_questions_object}
                     
                     hallucinated_questions = [hq['question'] for hq in hallucinated]
                     interview_questions_object = regenerate_interview_questions.invoke({
@@ -51,8 +47,6 @@ def interview_questions_node(state: CVProcessingState):
                     })
             
                     retries += 1
-    
-            print(interview_questions_object)
 
             # Process the generated interview questions
             state["messages"].append({"type": "success", "content": f"Interview questions generated successfully"})

@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-import os, asyncio
+import os, asyncio, requests
 from llm_handler.llm_handler import ChatCompletionHandler
 from workflow.langgraph_workflow import create_cv_scoring_workflow
 from models.graph_state import CVProcessingState
@@ -10,7 +10,21 @@ from models.candidate_assessment import CandidateFinalScore
 
 load_dotenv(override=True)
 
-def run_cv_scoring_example():
+HEADERS = {
+    "Accept": "application/vnd.github.mercy-preview+json"
+}
+
+
+def get_github_projects_summary(username: str, repo_name: str) -> list:
+    url = f"https://api.github.com/repos/{username}/{repo_name}/contents"
+    response = requests.get(url, headers=HEADERS)
+
+    if response.status_code != 200:
+        return []
+    
+    return response.json()
+
+def run_hr_screening_workflow():
 
     pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
     job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
@@ -71,8 +85,9 @@ def run_cv_scoring_example():
     )
 
     try:
-        result = workflow.invoke(initial_state)
-        print(result)
+        # print(get_github_projects_summary("Abdul-Muazzam-Deloitte", "HR-Candidate-Screening"))
+            result = workflow.invoke(initial_state)
+            print(result)
 
         # for chunk in workflow.stream(
         #         initial_state,
@@ -82,7 +97,6 @@ def run_cv_scoring_example():
         #     print("\n")
 
             # display(Image(workflow.get_graph().draw_mermaid_png()))
-
     except Exception as e:
         print(f"❌ Workflow execution failed: {str(e)}")
 
@@ -95,7 +109,7 @@ async def main():
     elif not landing_ai_api_key:
         raise ValueError("Missing LANDING_AI_API_KEY environment variable")
     else:
-        run_cv_scoring_example()
+        run_hr_screening_workflow()
 
 if __name__ == "__main__":
     asyncio.run(main())
