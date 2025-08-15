@@ -1,8 +1,7 @@
 from langchain.tools import tool
 from langchain.prompts import PromptTemplate
-from typing import Dict, Any
-from llm_handler.llm_handler import ChatCompletionHandler
-from models.score_result import CVScore
+from app.llm_handler.llm_handler import ChatCompletionHandler
+from app.models.score_result import CVScore
 
 @tool
 def score_cv_against_jd(cv_data: str, job_description: str) -> CVScore:

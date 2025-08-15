@@ -1,5 +1,5 @@
 
-from typing import List, Optional
+from typing import List
 from sentence_transformers import SentenceTransformer
 import openai
 

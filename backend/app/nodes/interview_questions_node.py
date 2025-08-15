@@ -1,6 +1,6 @@
-from models.graph_state import CVProcessingState
-from agent_tools.interview_questions_tool import generate_interview_questions, regenerate_interview_questions
-from agent_tools.validate_questions_tool import validate_questions_semantically
+from app.models.graph_state import CVProcessingState
+from app.agent_tools.interview_questions_tool import generate_interview_questions, regenerate_interview_questions
+from app.agent_tools.validate_questions_tool import validate_questions_semantically
 
 MAX_RETRIES = 2
 
@@ -21,7 +21,8 @@ def interview_questions_node(state: CVProcessingState):
                 return {"error": "No cv data available for interview questions."}
             
             interview_questions_object = generate_interview_questions.invoke({
-                "candidate_cv_content": state["cv_data"].markdown,
+                # "candidate_cv_content": state["cv_data"].markdown,
+                "candidate_cv_content": state["cv_data"]["markdown"],
                 "job_description": state["job_description"]
             })
 
@@ -30,7 +31,8 @@ def interview_questions_node(state: CVProcessingState):
                 while retries < MAX_RETRIES:
                     hallucinated = validate_questions_semantically.invoke({
                         "interview_questions" : interview_questions_object,
-                        "candidate_cv_content" : state["cv_data"].markdown,
+                        # "candidate_cv_content" : state["cv_data"].markdown,
+                        "candidate_cv_content": state["cv_data"]["markdown"],
                         "job_description" : state["job_description"]
                     })
                                                                                 
@@ -42,7 +44,8 @@ def interview_questions_node(state: CVProcessingState):
                     interview_questions_object = regenerate_interview_questions.invoke({
                         "interview_questions": interview_questions_object,
                         "hallucinated_questions": hallucinated_questions,
-                        "candidate_cv_content": state["cv_data"].markdown,
+                        # "candidate_cv_content": state["cv_data"].markdown,
+                        "candidate_cv_content": state["cv_data"]["markdown"],
                         "job_description": state["job_description"]
                     })
             

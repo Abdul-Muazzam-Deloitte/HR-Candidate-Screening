@@ -2,7 +2,7 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from dotenv import load_dotenv
 from langchain.tools import tool
-from models.social_media_score import SocialMediaScore
+from app.models.social_media_score import SocialMediaScore
 from typing import Optional
 import os, asyncio
 import json

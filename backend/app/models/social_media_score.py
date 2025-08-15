@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from models.score_result import ScoreDetail
+from app.models.score_result import ScoreDetail
 
 class SocialMediaScore(BaseModel):
     """Social media screening result"""

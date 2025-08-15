@@ -1,5 +1,5 @@
-from models.graph_state import CVProcessingState
-from agent_tools.document_extraction_tool import convert_pdf_to_markdown_landing_ai
+from app.models.graph_state import CVProcessingState
+from app.agent_tools.document_extraction_tool import convert_pdf_to_markdown_landing_ai
 
 # Graph nodes
 def landingai_extraction_node(state: CVProcessingState):

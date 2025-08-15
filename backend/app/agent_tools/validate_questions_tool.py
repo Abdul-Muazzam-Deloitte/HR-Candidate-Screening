@@ -1,10 +1,10 @@
-from models.interview_questions import InterviewQAs
+from app.models.interview_questions import InterviewQAs
 from typing import List
 import numpy as np
-from llm_handler.embedder import get_embeddings
+from app.llm_handler.embedder import get_embeddings
 from langchain.tools import tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from llm_handler.embedder import GeminiEmbedder
+from app.llm_handler.embedder import GeminiEmbedder
 
 @tool
 def validate_questions_semantically(interview_questions: InterviewQAs, candidate_cv_content: str, job_description: str, threshold: float = 0.5) -> List[dict]:
@@ -21,12 +21,11 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
         List[dict]: List of invalid questions with their similarity scores.
     """
 
-    def chunk_documents(cv_markdown: str, jd_markdown: str, chunk_size=500, chunk_overlap=100):
-        """ Splits the CV and job description into manageable chunks using LangChain.
+    def chunk_documents(document: str, chunk_size=2000, chunk_overlap=200):
+        """ Splits the document into manageable chunks using LangChain.
 
         Args:
-            cv_markdown (str): The markdown content of the CV.
-            jd_markdown (str): The job description text.
+            docuemnt (str): Document to be chunked.
             chunk_size (int): Size of each chunk.
             chunk_overlap (int): Overlap between chunks.
 
@@ -35,14 +34,14 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
         """
 
         splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-        cv_chunks = splitter.split_text(cv_markdown)
-        jd_chunks = splitter.split_text(jd_markdown)
-        return cv_chunks, jd_chunks
+        document_chunks = splitter.split_text(document)
+        return document_chunks
 
     embedder = GeminiEmbedder()
 
     # Split CV and JD into chunks
-    cv_chunks, jd_chunks = chunk_documents(candidate_cv_content, job_description)
+    cv_chunks = chunk_documents(candidate_cv_content)
+    jd_chunks = chunk_documents(job_description)
 
     # Get embeddings for CV and JD chunks       
     cv_chunk_embeddings = embedder.embed_batch(cv_chunks)

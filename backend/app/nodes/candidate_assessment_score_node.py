@@ -1,5 +1,5 @@
-from models.graph_state import CVProcessingState
-from agent_tools.candidate_assessment_tool import candiate_assessment_process
+from app.models.graph_state import CVProcessingState
+from app.agent_tools.candidate_assessment_tool import candiate_assessment_process
 
 def candidate_assessment_score_node(state: CVProcessingState):
 
@@ -20,6 +20,8 @@ def candidate_assessment_score_node(state: CVProcessingState):
                 "candidate_cv_score": state["cv_score"],
                 "candidate_social_score": None
             })
+
+            print(final_score_object)
 
             # return state
             state["messages"].append({"type": "success", "content": f"Final Assessment score successful"})

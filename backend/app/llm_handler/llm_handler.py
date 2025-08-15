@@ -1,9 +1,6 @@
 # Import environment variables from .env file
 from dotenv import load_dotenv
 import os
-from typing import Dict, Any
-import json
-from models.score_result import CVScore
 from pydantic import BaseModel
 
 # Import Google AI Package
@@ -71,7 +68,7 @@ class ChatCompletionHandler:
             "user_message": user_message
         })
 
-        return response
+        return response.model_dump()
 
     @staticmethod
     def get_response_gemini(system_message: str, user_message: str) -> str:

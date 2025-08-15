@@ -1,5 +1,5 @@
-from models.graph_state import CVProcessingState
-from agent_tools.cv_scoring_tool import score_cv_against_jd
+from app.models.graph_state import CVProcessingState
+from app.agent_tools.cv_scoring_tool import score_cv_against_jd
 
 def cv_scoring_node(state: CVProcessingState):
     """Node to score CV against job description.
@@ -17,7 +17,7 @@ def cv_scoring_node(state: CVProcessingState):
             return {"error": "No CV data available for scoring"}
  
         score_result_object = score_cv_against_jd.invoke({
-            "cv_data" : state["cv_data"].markdown,
+            "cv_data" : state["cv_data"]["markdown"],
             "job_description" : state["job_description"]
         })
 

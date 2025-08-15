@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from models.social_media_score import SocialMediaScore
-from models.score_result import CVScore
+from app.models.social_media_score import SocialMediaScore
+from app.models.score_result import CVScore
 from typing import Optional
 
 class CandidateFinalScore(BaseModel):

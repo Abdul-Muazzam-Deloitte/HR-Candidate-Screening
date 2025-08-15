@@ -1,9 +1,8 @@
 from langchain.tools import tool
 from langchain.prompts import PromptTemplate
-from llm_handler.llm_handler import ChatCompletionHandler
-from models.candidate_report import CandidateReport
-from models.candidate_assessment import CandidateFinalScore
-from typing import Optional, Dict, Any
+from app.llm_handler.llm_handler import ChatCompletionHandler
+from app.models.candidate_report import CandidateReport
+from app.models.candidate_assessment import CandidateFinalScore
 
 @tool
 def generate_candidate_report(candidate_cv_data: str, candidate_final_score: CandidateFinalScore):
