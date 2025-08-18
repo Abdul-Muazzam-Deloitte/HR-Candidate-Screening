@@ -1,90 +1,148 @@
 from dotenv import load_dotenv
 import os, asyncio
-from llm_handler.llm_handler import ChatCompletionHandler
-from workflow.langgraph_workflow import create_cv_scoring_workflow
-from models.graph_state import CVProcessingState
-from models.candidate_info import Candidate
-from models.interview_questions import InterviewQAs
-from models.score_result import CVScore, ScoreDetail
-from models.candidate_assessment import CandidateFinalScore
+from app.workflow.langgraph_workflow import hr_screening_workflow
+from app.document_extraction.document_extractor import DocumentExtractor
+
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+import shutil
+
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploaded_cvs")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 load_dotenv(override=True)
 
-def run_cv_scoring_example():
+app = FastAPI(
+    title="HR Screening API",
+    description="API to run the HR screening workflow",
+    version="1.0.0"
+)
 
-    pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
-    job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
+# Allow CORS for your ReactJS frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # change to ["http://localhost:3000"] in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    workflow = create_cv_scoring_workflow()
+@app.get("/")
+def root():
+    return {"message": "HR Screening API is running 🚀"}
 
-    initial_state = CVProcessingState(
-        pdf_path=pdf_path,
-        job_description=job_description,
-        cv_data=Candidate(
-            name="",
-            email="test@test.com",
-            summary="",
-            skills=[],
-            experience=[],
-            education=[],
-            social_links=[],
-            markdown=""
-        ),
-        cv_score=CVScore(
-            technical_skills=ScoreDetail(score=1, notes=""),
-            experience_relevance=ScoreDetail(score=1, notes=""),
-            years_experience=ScoreDetail(score=1, notes=""),
-            project_fit=ScoreDetail(score=1, notes=""),
-            soft_skills=ScoreDetail(score=1, notes=""),
-            education_certifications=ScoreDetail(score=1, notes=""),
-            communication=ScoreDetail(score=1, notes=""),
-            overall_recommendation="Moderate Fit"
-        ),
-        social_media_score=None,
-        candidate_final_score=CandidateFinalScore(
-            cv_assessment=CVScore(
-                technical_skills=ScoreDetail(score=1, notes=""),
-                experience_relevance=ScoreDetail(score=1, notes=""),
-                years_experience=ScoreDetail(score=1, notes=""),
-                project_fit=ScoreDetail(score=1, notes=""),
-                soft_skills=ScoreDetail(score=1, notes=""),
-                education_certifications=ScoreDetail(score=1, notes=""),
-                communication=ScoreDetail(score=1, notes=""),
-                overall_recommendation="Moderate Fit"
-            ),
-            social_media_assessment=None,
-            final_recommendation="",
-            proceed_to_interview="No"
-        ),
-        interview_questions=InterviewQAs(
-            technical_questions=[],
-            behavioral_questions=[],
-            experience_questions=[],
-            situational_questions=[],
-            cultural_fit_questions=[],
-            areas_to_probe=[],
-            red_flag_questions=[],
-            interview_duration=""
-        ),
-        messages=[],
-        error=""
-    )
+# @app.post("/run-screening", summary="Run CV screening workflow", tags=["Screening"])
+# async def run_screening(file: UploadFile = File(...)):
+#     try:
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file.filename)
+#         with open(file_location, "wb") as buffer:
+#             shutil.copyfileobj(file.file, buffer)
 
+#         # return EventSourceResponse(hr_screening_workflow(file_location))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/extract_cv_contents", summary="Document Extraction", tags=["Extraction"])
+# def run_document_extraction(file: UploadFile = File(...)):
+#     try:
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file.filename)
+#         with open(file_location, "wb") as buffer:
+#             shutil.copyfileobj(file.file, buffer)
+
+#         # Run extraction on saved file
+#         document_extractor = DocumentExtractor(filepath=file_location)
+#         result =  document_extractor.extract_cv_info()
+
+#         return result
+
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.websocket("/ws/run-screening")
+# async def ws_run_screening(websocket: WebSocket):
+#     """
+#     WebSocket endpoint to run CV screening workflow and stream updates to frontend (AG-UI)
+#     """
+#     await websocket.accept()
+#     try:
+#         # Wait for initial message containing file info
+#         data = await websocket.receive_json()
+#         file_name = data.get("file_name")
+#         file_content = data.get("file_content")  # base64 encoded file
+
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file_name)
+#         with open(file_location, "wb") as f:
+#             import base64
+#             f.write(base64.b64decode(file_content))
+
+#         print(file_location)
+
+#         # Run workflow and stream updates
+#         async for update in hr_screening_workflow(file_location, session=websocket):
+#             # Each update is already sent via `session.send` in workflow
+#             pass  # the workflow handles sending updates to WebSocket
+
+#     except WebSocketDisconnect:
+#         print("Client disconnected from WebSocket")
+#     except Exception as e:
+#         await websocket.send_json({"type": "workflow_status", "status": "error", "error": str(e)})
+#         print(f"Workflow failed: {str(e)}")
+
+
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+from ag_ui.encoder import EventEncoder
+
+encoder = EventEncoder()
+
+@app.websocket("/ws/run-screening")
+async def agui_ws(ws: WebSocket):
+    await ws.accept()
     try:
-        result = workflow.invoke(initial_state)
-        print(result)
+        # Receive uploaded file metadata
+        print(ws)
+        data = await ws.receive_json()
+        file_name = data["file_name"]
+        file_content = data["file_content"]
 
-        # for chunk in workflow.stream(
-        #         initial_state,
-        #         stream_mode="updates"
-        # ):
-        #     print(chunk)
-        #     print("\n")
+        print(data)
 
-            # display(Image(workflow.get_graph().draw_mermaid_png()))
+        # Save uploaded file
+        file_location = os.path.join(UPLOAD_DIR, file_name)
+        with open(file_location, "wb") as f:
+            f.write(shutil.base64.b64decode(file_content))
 
+        # Notify frontend run started
+        await ws.send_text(encoder.encode(
+            RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
+        ))
+
+        # Run the workflow and stream events
+        async for event in hr_screening_workflow(file_location):
+            await ws.send_text(encoder.encode(event))
+
+        # Run finished
+        await ws.send_text(encoder.encode(
+            RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1")
+        ))
+
+    except WebSocketDisconnect:
+        print("Client disconnected")
     except Exception as e:
-        print(f"❌ Workflow execution failed: {str(e)}")
+        # await ws.send_text(encoder.encode(
+        #    RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))
+        # ))
+        print('error')
 
 async def main():
 
@@ -95,7 +153,8 @@ async def main():
     elif not landing_ai_api_key:
         raise ValueError("Missing LANDING_AI_API_KEY environment variable")
     else:
-        run_cv_scoring_example()
+        print("Google API Key and Landing AI API Key are set.")
+        # hr_screening_workflow()
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,9 +1,9 @@
 from langchain.tools import tool
 from langchain.prompts import PromptTemplate
-from llm_handler.llm_handler import ChatCompletionHandler
-from models.candidate_assessment import CandidateFinalScore
-from models.score_result import CVScore
-from typing import Optional, Dict, Any
+from app.llm_handler.llm_handler import ChatCompletionHandler
+from app.models.candidate_assessment import CandidateFinalScore
+from app.models.score_result import CVScore
+from typing import Optional
 
 @tool
 def candiate_assessment_process(candidate_cv_score: CVScore

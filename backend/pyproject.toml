@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "ag-ui-protocol>=0.1.8",
     "agentic-doc>=0.2.10",
     "crawl4ai>=0.6.3",
+    "fastapi>=0.116.1",
     "google-generativeai>=0.8.5",
     "ipython>=9.4.0",
     "langchain>=0.3.26",
@@ -17,10 +19,16 @@ dependencies = [
     "langgraph>=0.5.3",
     "openai>=1.93.0",
     "playwright>=1.53.0",
+    "psycopg2-binary>=2.9.10",
     "pydantic[email]>=2.11.7",
     "python-dotenv",
+    "python-multipart>=0.0.20",
     "requests",
     "sentence-transformers>=5.0.0",
+    "sqlalchemy>=2.0.41",
+    "sse-starlette>=3.0.2",
+    "supabase>=2.18.0",
+    "uvicorn>=0.35.0",
 ]
 [tool.setuptools.packages.find]
 exclude = ["node_modules*"]

@@ -1,16 +1,15 @@
 
 from agentic_doc.parse import parse
-from models.candidate_info import Candidate
-from models.extraction_info import CVExtractionInfo
+from app.models.candidate_info import Candidate
 from dotenv import load_dotenv
 import os
 import requests
-from IPython.display import Markdown, display
 
 
 load_dotenv(override=True)
 
 class DocumentExtractor():
+    file_path: str
 
     def __init__(self, filepath: str):
         self.filepath = filepath
@@ -25,60 +24,35 @@ class DocumentExtractor():
             contents of PDF in markdown format
         """
         
-        return self.convert_pdf_to_markdown_landing_ai_sdk()
+        return self.convert_pdf_to_markdown_landing_ai()
 
         # return self.convert_pdf_to_markdown_landing_ai_api()
 
-    def convert_pdf_to_markdown_landing_ai_sdk(self) -> CVExtractionInfo:
-        """
-        Method to perform PDF agentic document extraction via Landing AI SDK
-        
+    def convert_pdf_to_markdown_landing_ai(self) -> Candidate:
+        """Extracts candidate information from a PDF using Landing AI.
+
+        Args:
+            pdf_path (str): Path to the candidate's CV in PDF format.
+
         Returns:
-            contents of PDF in markdown format
-        """
-
+            Candidate: Extracted candidate information.
+        """ 
         try:    
-
             # Extract candidte info from CV in pdf format using Landing AI
             # filepath: path of CV
             # extraction_model: extract specific data from pdf based on Candidate class        
             parsed_docs = parse(self.filepath, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
             fields = parsed_docs[0].extraction
 
-            # print(parsed_docs)
-            # print(fields)
-            # # Return the value of one of the extracted fields
-            # print(fields.name)
-            # print(fields.email)
-            # print(fields.tel_no)
-            # print(fields.address)
-            print(fields.linkedin_url)
-            print(fields.github_url)
-            print(fields.x_url)
-            # print(fields.summary)
-
-            # result = {
-            #     "markdown": parsed_docs[0].markdown,
-            #     "social_links": {
-            #         "linkedin": getattr(fields, "linkedin_url", None),
-            #         "github": getattr(fields, "github_url", None),
-            #         "x": getattr(fields, "x_url", None)
-            #     }
-            # }
+            # Return data into JSON
+            # return fields.model_dump()
             
-            # Return data into markdown format
-            return CVExtractionInfo(
-                markdown=parsed_docs[0].markdown,
-                social_links={
-                    "linkedin": getattr(fields, "linkedin_url", None),
-                    "github": getattr(fields, "github_url", None),
-                    "x": getattr(fields, "x_url", None)
-                }
-            )
-
+            # Return data as Candidate Object
+            return fields
 
         except Exception as e:
-            print('Cannot parse document: ', e)
+            print('Error in convert_pdf_to_markdown_landing_ai:', str(e))
+            return Candidate()
 
     def convert_pdf_to_markdown_landing_ai_api(self):
         """
@@ -137,3 +111,21 @@ class DocumentExtractor():
         else:
             print(f"❌ Request failed with status {response.status_code}")
             print(response.text)
+
+
+
+
+HEADERS = {
+    "Accept": "application/vnd.github.mercy-preview+json"
+}
+
+
+def get_github_projects_summary(username: str, repo_name: str) -> list:
+    url = f"https://api.github.com/repos/{username}/{repo_name}/contents"
+    response = requests.get(url, headers=HEADERS)
+
+    if response.status_code != 200:
+        return []
+    
+    return response.json()
+

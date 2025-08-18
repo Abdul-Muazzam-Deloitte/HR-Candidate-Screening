@@ -1,5 +1,5 @@
 from agentic_doc.parse import parse
-from models.candidate_info import Candidate
+from app.models.candidate_info import Candidate
 from dotenv import load_dotenv
 from langchain.tools import tool
 
@@ -23,10 +23,10 @@ def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
         fields = parsed_docs[0].extraction
 
         # Return data into JSON
-        # return fields.model_dump()
+        return fields.model_dump()
         
         # Return data as Candidate Object
-        return fields
+        # return fields
 
     except Exception as e:
         print('Error in convert_pdf_to_markdown_landing_ai:', str(e))

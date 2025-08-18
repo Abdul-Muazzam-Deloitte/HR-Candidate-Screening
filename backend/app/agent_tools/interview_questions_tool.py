@@ -1,7 +1,7 @@
 from langchain.tools import tool
 from langchain.prompts import PromptTemplate
-from llm_handler.llm_handler import ChatCompletionHandler
-from models.interview_questions import InterviewQAs
+from app.llm_handler.llm_handler import ChatCompletionHandler
+from app.models.interview_questions import InterviewQAs
 from typing import List
 
 @tool

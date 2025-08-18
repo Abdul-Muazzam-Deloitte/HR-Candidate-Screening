@@ -1,9 +1,6 @@
 # Import environment variables from .env file
 from dotenv import load_dotenv
 import os
-from typing import Dict, Any
-import json
-from models.score_result import CVScore
 from pydantic import BaseModel
 
 # Import Google AI Package
@@ -41,7 +38,8 @@ class ChatCompletionHandler:
             model=model,
             api_key=google_api_key,
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            temperature=0.5
+            temperature=0.5,
+            streaming=True
         )
 
         self.prompt_template = ChatPromptTemplate.from_messages([
@@ -51,7 +49,7 @@ class ChatCompletionHandler:
 
         self.chain: Runnable | None = None
 
-    def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel]):
+    async def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel], session=None):
         """
         Construct the langChain chain to invoke a call to the LLM
 
@@ -66,12 +64,38 @@ class ChatCompletionHandler:
 
         self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
 
+                # If session is provided, stream token by token
+        if session:
+            # Generator interface to stream tokens
+            async for token_chunk in self.chain.stream({
+                "system_message": system_message,
+                "user_message": user_message
+            }):
+                # Send each partial token to frontend
+                await session.send({
+                    "node": "llm",
+                    "token": token_chunk
+                })
+
+            # After streaming finishes, get the final result
+            response = self.chain.invoke({
+                "system_message": system_message,
+                "user_message": user_message
+            })
+        else:
+            # Normal blocking call if no session
+            response = self.chain.invoke({
+                "system_message": system_message,
+                "user_message": user_message
+            })
+
+
         response = self.chain.invoke({
             "system_message": system_message,
             "user_message": user_message
         })
 
-        return response
+        return response.model_dump()
 
     @staticmethod
     def get_response_gemini(system_message: str, user_message: str) -> str:
