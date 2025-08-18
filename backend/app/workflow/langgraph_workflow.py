@@ -91,7 +91,7 @@ def create_cv_scoring_workflow():
     
     return workflow.compile()
 
-def hr_screening_workflow(pdf_path: str):
+async def hr_screening_workflow(pdf_path: str, session=None):
 
     # pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
     job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
@@ -152,26 +152,41 @@ def hr_screening_workflow(pdf_path: str):
     )
 
     try:
-        # print(get_github_projects_summary("Abdul-Muazzam-Deloitte", "HR-Candidate-Screening"))
-        # result = workflow_graph.invoke(initial_state)
-        # print(result)
-
-        # return result
-
-        for chunk in workflow_graph.stream(
-                initial_state,
-                stream_mode="updates"
+        # Stream workflow node updates
+        async for chunk in workflow_graph.stream(
+            initial_state,
+            stream_mode="updates",
+            session=session  # Pass AG-UI session to nodes
         ):
-                    # Convert Pydantic model or dict to JSON string
-            if hasattr(chunk, "model_dump"):  # Pydantic model
+            # Convert to dict for JSON
+            if hasattr(chunk, "model_dump"):
                 chunk_dict = chunk.model_dump()
             else:
                 chunk_dict = dict(chunk)
-            yield json.dumps(chunk_dict) + "\n"
+            
+            # Send node update to frontend
+            if session:
+                await session.send({
+                    "type": "workflow_update",
+                    "data": chunk_dict
+                })
+            
+            # Yield for any server-side generators (if needed)
+            yield chunk_dict
 
-        yield {"data": initial_state}
-
-        print("✅ Workflow execution completed successfully")
+        # Final completion event
+        if session:
+            await session.send({
+                "type": "workflow_status",
+                "status": "completed",
+                "final_state": initial_state if hasattr(initial_state, "model_dump") else dict(initial_state)
+            })
 
     except Exception as e:
+        if session:
+            await session.send({
+                "type": "workflow_status",
+                "status": "error",
+                "error": str(e)
+            })
         print(f"❌ Workflow execution failed: {str(e)}")

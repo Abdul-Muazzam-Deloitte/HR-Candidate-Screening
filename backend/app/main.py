@@ -3,11 +3,9 @@ import os, asyncio
 from app.workflow.langgraph_workflow import hr_screening_workflow
 from app.document_extraction.document_extractor import DocumentExtractor
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
-
-from sse_starlette.sse import EventSourceResponse
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploaded_cvs")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -33,34 +31,118 @@ app.add_middleware(
 def root():
     return {"message": "HR Screening API is running 🚀"}
 
-@app.post("/run-screening", summary="Run CV screening workflow", tags=["Screening"])
-async def run_screening(file: UploadFile = File(...)):
+# @app.post("/run-screening", summary="Run CV screening workflow", tags=["Screening"])
+# async def run_screening(file: UploadFile = File(...)):
+#     try:
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file.filename)
+#         with open(file_location, "wb") as buffer:
+#             shutil.copyfileobj(file.file, buffer)
+
+#         # return EventSourceResponse(hr_screening_workflow(file_location))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/extract_cv_contents", summary="Document Extraction", tags=["Extraction"])
+# def run_document_extraction(file: UploadFile = File(...)):
+#     try:
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file.filename)
+#         with open(file_location, "wb") as buffer:
+#             shutil.copyfileobj(file.file, buffer)
+
+#         # Run extraction on saved file
+#         document_extractor = DocumentExtractor(filepath=file_location)
+#         result =  document_extractor.extract_cv_info()
+
+#         return result
+
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.websocket("/ws/run-screening")
+# async def ws_run_screening(websocket: WebSocket):
+#     """
+#     WebSocket endpoint to run CV screening workflow and stream updates to frontend (AG-UI)
+#     """
+#     await websocket.accept()
+#     try:
+#         # Wait for initial message containing file info
+#         data = await websocket.receive_json()
+#         file_name = data.get("file_name")
+#         file_content = data.get("file_content")  # base64 encoded file
+
+#         # Save uploaded file to disk
+#         file_location = os.path.join(UPLOAD_DIR, file_name)
+#         with open(file_location, "wb") as f:
+#             import base64
+#             f.write(base64.b64decode(file_content))
+
+#         print(file_location)
+
+#         # Run workflow and stream updates
+#         async for update in hr_screening_workflow(file_location, session=websocket):
+#             # Each update is already sent via `session.send` in workflow
+#             pass  # the workflow handles sending updates to WebSocket
+
+#     except WebSocketDisconnect:
+#         print("Client disconnected from WebSocket")
+#     except Exception as e:
+#         await websocket.send_json({"type": "workflow_status", "status": "error", "error": str(e)})
+#         print(f"Workflow failed: {str(e)}")
+
+
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+from ag_ui.encoder import EventEncoder
+
+encoder = EventEncoder()
+
+@app.websocket("/ws/run-screening")
+async def agui_ws(ws: WebSocket):
+    await ws.accept()
     try:
-        # Save uploaded file to disk
-        file_location = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_location, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Receive uploaded file metadata
+        print(ws)
+        data = await ws.receive_json()
+        file_name = data["file_name"]
+        file_content = data["file_content"]
 
-        return EventSourceResponse(hr_screening_workflow(file_location))
+        print(data)
+
+        # Save uploaded file
+        file_location = os.path.join(UPLOAD_DIR, file_name)
+        with open(file_location, "wb") as f:
+            f.write(shutil.base64.b64decode(file_content))
+
+        # Notify frontend run started
+        await ws.send_text(encoder.encode(
+            RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
+        ))
+
+        # Run the workflow and stream events
+        async for event in hr_screening_workflow(file_location):
+            await ws.send_text(encoder.encode(event))
+
+        # Run finished
+        await ws.send_text(encoder.encode(
+            RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1")
+        ))
+
+    except WebSocketDisconnect:
+        print("Client disconnected")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/extract_cv_contents", summary="Document Extraction", tags=["Extraction"])
-def run_document_extraction(file: UploadFile = File(...)):
-    try:
-        # Save uploaded file to disk
-        file_location = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_location, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        # Run extraction on saved file
-        document_extractor = DocumentExtractor(filepath=file_location)
-        result =  document_extractor.extract_cv_info()
-
-        return result
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # await ws.send_text(encoder.encode(
+        #    RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))
+        # ))
+        print('error')
 
 async def main():
 
