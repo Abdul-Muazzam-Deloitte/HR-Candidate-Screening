@@ -5,14 +5,31 @@ from dotenv import load_dotenv
 import os
 import requests
 
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
+
+from ag_ui.encoder import EventEncoder
+
 
 load_dotenv(override=True)
 
 class DocumentExtractor():
     file_path: str
+    ws: WebSocket
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, ws: WebSocket, encoder: EventEncoder ):
         self.filepath = filepath
+        self.ws = ws
+        self.encoder = encoder
 
     def extract_cv_info(self):
         """
@@ -24,11 +41,11 @@ class DocumentExtractor():
             contents of PDF in markdown format
         """
         
-        return self.convert_pdf_to_markdown_landing_ai()
+        return self.convert_pdf_to_markdown_landing_ai(self.ws, self.encoder)
 
         # return self.convert_pdf_to_markdown_landing_ai_api()
 
-    def convert_pdf_to_markdown_landing_ai(self) -> Candidate:
+    async def convert_pdf_to_markdown_landing_ai(self, ws: WebSocket, encoder: EventEncoder) -> Candidate:
         """Extracts candidate information from a PDF using Landing AI.
 
         Args:
@@ -38,16 +55,26 @@ class DocumentExtractor():
             Candidate: Extracted candidate information.
         """ 
         try:    
+            await ws.send_text(encoder.encode(
+            StepStartedEvent(type=EventType.STEP_STARTED, stepName="Parse_cv_start")))
+
+              # step 1: parsing
+            # await StepStartedEvent(type= EventType.STEP_STARTED, stepName= "Parse_cv_start").send(ws)
             # Extract candidte info from CV in pdf format using Landing AI
             # filepath: path of CV
             # extraction_model: extract specific data from pdf based on Candidate class        
             parsed_docs = parse(self.filepath, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
             fields = parsed_docs[0].extraction
 
+            # await StepFinishedEvent(type= EventType.STEP_FINISHED, stepName= "Parse_cv_finish").send(ws)
+
             # Return data into JSON
             # return fields.model_dump()
             
             # Return data as Candidate Object
+
+            await ws.send_text(encoder.encode(
+            StepFinishedEvent(type=EventType.STEP_FINISHED, stepName="Parse_cv_finish")))
             return fields
 
         except Exception as e:

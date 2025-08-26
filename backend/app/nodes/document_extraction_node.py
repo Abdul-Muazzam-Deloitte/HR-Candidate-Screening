@@ -1,6 +1,16 @@
 from app.models.graph_state import CVProcessingState
 from app.agent_tools.document_extraction_tool import convert_pdf_to_markdown_landing_ai
-from ag_ui.core import StepStartedEvent, StepFinishedEvent, TextMessageContentEvent, EventType
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+from langgraph.config import get_stream_writer
 
 # Graph nodes
 def landingai_extraction_node(state: CVProcessingState):
@@ -12,37 +22,25 @@ def landingai_extraction_node(state: CVProcessingState):
     Returns:
         dict: Updated state with extracted CV data or error message.
     """
-
-    # Emit "step started"
-    yield StepStartedEvent(type=EventType.STEP_STARTED, step="cv_scoring")
+    writer = get_stream_writer()
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="document_extraction", run_id="document_extraction"))
 
     try:
         if not state.get("pdf_path"):
+            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="No PDF path provided"))
             return {"error": "No PDF path provided"}
-        
+
         # LandingAI extraction method
         
         cv_data_object = convert_pdf_to_markdown_landing_ai.invoke({
             "pdf_path" : state["pdf_path"]
         })
-
-        yield TextMessageContentEvent(
-            type=EventType.TEXT_MESSAGE_CONTENT,
-            delta=f"Scored CV successfully: {cv_data_object}"
-        )
-        
-        if "error" in cv_data_object:
-            state["messages"].append({"type": "warning", "content": "Extraction failed"})
-            
+                 
         state["messages"].append({"type": "success", "content": "CV extracted successfully with LandingAI"})
 
-        yield StepFinishedEvent(type=EventType.STEP_FINISHED, step="cv_scoring", output=cv_data_object)
-
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="document_extraction", run_id="document_extraction", result=cv_data_object))
         return {"cv_data": cv_data_object}
-        
+
     except Exception as e:
-        yield TextMessageContentEvent(
-            type=EventType.TEXT_MESSAGE_CONTENT,
-            delta=f"Error scoring CV: {str(e)}"
-        )
+        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=str(e)))
         return {"error": f"LandingAI extraction failed: {str(e)}"}

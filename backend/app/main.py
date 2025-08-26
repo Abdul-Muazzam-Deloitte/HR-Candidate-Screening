@@ -102,6 +102,8 @@ from ag_ui.core import (
     EventType
 )
 from ag_ui.encoder import EventEncoder
+import base64
+import json
 
 encoder = EventEncoder()
 
@@ -110,39 +112,60 @@ async def agui_ws(ws: WebSocket):
     await ws.accept()
     try:
         # Receive uploaded file metadata
-        print(ws)
         data = await ws.receive_json()
-        file_name = data["file_name"]
-        file_content = data["file_content"]
 
-        print(data)
-
+        file_name = data["payload"]["fileName"]
+        file_content = data["payload"]["fileContent"]
         # Save uploaded file
         file_location = os.path.join(UPLOAD_DIR, file_name)
         with open(file_location, "wb") as f:
-            f.write(shutil.base64.b64decode(file_content))
+            f.write(base64.b64decode(file_content))
 
         # Notify frontend run started
-        await ws.send_text(encoder.encode(
-            RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
-        ))
+        # await ws.send_text(encoder.encode(
+        #     RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
+        # ))
 
-        # Run the workflow and stream events
-        async for event in hr_screening_workflow(file_location):
-            await ws.send_text(encoder.encode(event))
+        # # Run the workflow and stream events
+        # async for event in hr_screening_workflow(file_location, ws=ws, encoder=encoder):
+        #     await ws.send_text(encoder.encode(event))
+
+        # result = hr_screening_workflow(file_location, ws=ws, encoder=encoder)
+        # print(result)
+
+        async for update in hr_screening_workflow(file_location):
+
+            print("Update received:", update)
+            # try:
+            #     # If AG-UI Pydantic event, use .model_dump() or .json()
+            #     if hasattr(update, "model_dump"):
+            #         await ws.send_text(update.model_dump_json())
+            #     else:
+            #         await ws.send_text(json.dumps(update))
+            # except Exception as e:
+            #     await ws.send_text(json.dumps({"type": "error", "message": str(e)}))
+
+            await ws.send_text( # Send raw JSON string directly
+                encoder.encode(update)
+                )
+
+        # document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
+        # result = await document_Extractor.extract_cv_info()
 
         # Run finished
-        await ws.send_text(encoder.encode(
-            RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1")
-        ))
+        # await ws.send_text(encoder.encode(
+        #     RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1", result=result)
+        # ))
+        await ws.close()
 
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:
-        # await ws.send_text(encoder.encode(
-        #    RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))
-        # ))
-        print('error')
+        await ws.send_text(encoder.encode(
+           RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))
+        ))
+        print('error'   , str(e))
+
 
 async def main():
 

@@ -14,7 +14,28 @@ from app.nodes.interview_questions_node import interview_questions_node
 from app.nodes.candidate_report_node import send_report_node as candidate_report_node
 from langgraph.graph import StateGraph, END
 
+from ag_ui.encoder import EventEncoder
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
+
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
 import json
+from ag_ui.core.events import BaseEvent
+
+from pydantic import BaseModel
+
+class DictEvent(BaseEvent, BaseModel):
+    type: EventType
+    data: dict
+
 
 def create_cv_scoring_workflow():
     """Create the CV scoring workflow graph.
@@ -43,7 +64,7 @@ def create_cv_scoring_workflow():
         if state.get("error"):
             return "error_handler"
         # This will trigger both nodes to run in parallel
-        return ["cv_scoring", "social_media_screening"]
+        return ("cv_scoring", "social_media_screening")
     
             # Critical routing after score merging
     def route_after_scoring(state):
@@ -91,8 +112,9 @@ def create_cv_scoring_workflow():
     
     return workflow.compile()
 
-async def hr_screening_workflow(pdf_path: str, session=None):
+async def hr_screening_workflow(pdf_path: str):
 
+    print("Starting HR screening workflow...")
     # pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
     job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
 
@@ -152,41 +174,53 @@ async def hr_screening_workflow(pdf_path: str, session=None):
     )
 
     try:
-        # Stream workflow node updates
-        async for chunk in workflow_graph.stream(
-            initial_state,
-            stream_mode="updates",
-            session=session  # Pass AG-UI session to nodes
-        ):
-            # Convert to dict for JSON
-            if hasattr(chunk, "model_dump"):
-                chunk_dict = chunk.model_dump()
-            else:
-                chunk_dict = dict(chunk)
-            
-            # Send node update to frontend
-            if session:
-                await session.send({
-                    "type": "workflow_update",
-                    "data": chunk_dict
-                })
-            
-            # Yield for any server-side generators (if needed)
-            yield chunk_dict
 
-        # Final completion event
-        if session:
-            await session.send({
-                "type": "workflow_status",
-                "status": "completed",
-                "final_state": initial_state if hasattr(initial_state, "model_dump") else dict(initial_state)
-            })
+        print("Starting workflow execution...")
+        yield RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
+        
+        # result = workflow_graph.invoke(
+        #     initial_state
+        # )
+
+        # Stream workflow node updates
+        for chunk in workflow_graph.stream(
+            initial_state,
+            stream_mode= "custom"
+        ):
+            print(type(chunk))
+            # if hasattr(chunk, "model_dump"):
+            #     yield chunk.model_dump()
+            # else:
+            # # Fallback: serialize as dict/JSON
+            #     yield json.dumps(chunk)
+
+            if isinstance(chunk, dict):
+                event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data=chunk)
+            elif isinstance(chunk, str):
+                event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data={"message": chunk})
+            else:
+                event_to_send = chunk
+
+            yield event_to_send
+            # # Convert Pydantic model or dict to JSON string
+            # if hasattr(chunk, "model_dump"):  # Pydantic model
+            #     chunk_dict = chunk.model_dump()
+            # else:
+            #     chunk_dict = dict(chunk)
+
+            # print(chunk_dict)
+            # yield chunk_dict
+            # yield chunk.model_dump()
+            # await chunk
+
+        # yield initial_state
+
+        yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1")
+
+        # await ws.send_text(encoder.encode(
+        #     RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1", result=initial_state)
+        # ))
 
     except Exception as e:
-        if session:
-            await session.send({
-                "type": "workflow_status",
-                "status": "error",
-                "error": str(e)
-            })
+        yield RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))
         print(f"❌ Workflow execution failed: {str(e)}")

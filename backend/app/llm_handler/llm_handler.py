@@ -49,7 +49,7 @@ class ChatCompletionHandler:
 
         self.chain: Runnable | None = None
 
-    async def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel], session=None):
+    def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel]):
         """
         Construct the langChain chain to invoke a call to the LLM
 
@@ -63,32 +63,6 @@ class ChatCompletionHandler:
         """
 
         self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
-
-                # If session is provided, stream token by token
-        if session:
-            # Generator interface to stream tokens
-            async for token_chunk in self.chain.stream({
-                "system_message": system_message,
-                "user_message": user_message
-            }):
-                # Send each partial token to frontend
-                await session.send({
-                    "node": "llm",
-                    "token": token_chunk
-                })
-
-            # After streaming finishes, get the final result
-            response = self.chain.invoke({
-                "system_message": system_message,
-                "user_message": user_message
-            })
-        else:
-            # Normal blocking call if no session
-            response = self.chain.invoke({
-                "system_message": system_message,
-                "user_message": user_message
-            })
-
 
         response = self.chain.invoke({
             "system_message": system_message,
