@@ -176,8 +176,7 @@ async def hr_screening_workflow(pdf_path: str):
     try:
 
         print("Starting workflow execution...")
-        yield RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
-        
+      
         # result = workflow_graph.invoke(
         #     initial_state
         # )
@@ -214,8 +213,6 @@ async def hr_screening_workflow(pdf_path: str):
             # await chunk
 
         # yield initial_state
-
-        yield RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1")
 
         # await ws.send_text(encoder.encode(
         #     RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1", result=initial_state)

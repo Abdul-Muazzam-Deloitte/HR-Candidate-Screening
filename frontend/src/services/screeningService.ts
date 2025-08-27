@@ -96,35 +96,40 @@ const generateQuestions = async (
       question: `Can you describe your experience with ${matchedSkills[0] || 'the main technology'} and how you've used it in previous projects?`,
       type: 'technical',
       difficulty: 'medium',
-      expectedAnswer: 'Look for specific examples, project details, and problem-solving approach.'
+      expectedAnswer: 'Look for specific examples, project details, and problem-solving approach.',
+      timeLimit: 0
     },
     {
       id: '2',
       question: 'Tell me about a challenging project you worked on and how you overcame the obstacles.',
       type: 'behavioral',
       difficulty: 'medium',
-      expectedAnswer: 'Assess problem-solving skills, resilience, and learning ability.'
+      expectedAnswer: 'Assess problem-solving skills, resilience, and learning ability.',
+      timeLimit: 0
     },
     {
       id: '3',
       question: `How would you approach building a scalable ${jobDescription.title.toLowerCase()} solution?`,
       type: 'situational',
       difficulty: 'hard',
-      expectedAnswer: 'Evaluate architectural thinking, scalability concepts, and best practices.'
+      expectedAnswer: 'Evaluate architectural thinking, scalability concepts, and best practices.',
+      timeLimit: 0
     },
     {
       id: '4',
       question: 'How do you stay updated with the latest technologies and industry trends?',
       type: 'behavioral',
       difficulty: 'easy',
-      expectedAnswer: 'Look for continuous learning mindset and professional development.'
+      expectedAnswer: 'Look for continuous learning mindset and professional development.',
+      timeLimit: 0
     },
     {
       id: '5',
       question: `What would you do if you encountered a performance issue in a ${matchedSkills.includes('React') ? 'React' : 'web'} application?`,
       type: 'technical',
       difficulty: 'hard',
-      expectedAnswer: 'Assess debugging skills, performance optimization knowledge, and systematic approach.'
+      expectedAnswer: 'Assess debugging skills, performance optimization knowledge, and systematic approach.',
+      timeLimit: 0
     }
   ];
   

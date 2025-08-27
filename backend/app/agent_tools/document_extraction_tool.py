@@ -2,8 +2,19 @@ from agentic_doc.parse import parse
 from app.models.candidate_info import Candidate
 from dotenv import load_dotenv
 from langchain.tools import tool
-from langgraph.config import get_stream_writer
 
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+
+from langgraph.config import get_stream_writer
 
 load_dotenv(override=True)
 
@@ -21,9 +32,15 @@ def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
     try:    
         # Extract candidte info from CV in pdf format using Landing AI
         # filepath: path of CV
-        # extraction_model: extract specific data from pdf based on Candidate class        
+        # extraction_model: extract specific data from pdf based on Candidate class 
+        writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - document_extraction - Parsing CV contents ..."))       
         parsed_docs = parse(pdf_path, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
+        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - document_extraction - Parsing CV contents completed"))
+
+
+        writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="2 - document_extraction - Extracting CV contents..."))
         fields = parsed_docs[0].extraction
+        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="2 - document_extraction - Extracting CV contents"))
 
         # Return data into JSON
         # return fields.model_dump()

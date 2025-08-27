@@ -9,7 +9,7 @@ import { apiService, CVExtractionResult } from '../../services/apiService';
 
 export const NewScreeningPage: React.FC = () => {
   const navigate = useNavigate();
-  const { createSession } = useScreening();
+  const { createSession, extractCVContents } = useScreening();
   const { jobDescriptions } = useJobDescriptions();
   const [step, setStep] = useState<'upload' | 'job-selection'>('upload');
   const [candidate, setCandidate] = useState<Candidate | null>(null);
@@ -46,7 +46,13 @@ export const NewScreeningPage: React.FC = () => {
     try {
       // Create session first with basic candidate info
       const sessionId = await createSession(candidate, selectedJob, uploadedFile);
+      console.log(sessionId)
+
       navigate(`/candidate-details/${sessionId}`);
+
+      
+      // 2️⃣ Call API service to start the workflow
+      await extractCVContents(sessionId, uploadedFile);
     } catch (error) {
       console.error('Error creating session:', error);
     } finally {

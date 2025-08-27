@@ -72,13 +72,29 @@ export interface ScreeningSession {
   recommendation?: string;
 }
 
+export type Status = "pending" | "in_progress" | "completed" | "failed" | "error";
+
 export interface ProcessStep {
   id: string;
   name: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: Status;
   message: string;
   timestamp: Date;
   progress?: number;
+}
+
+export interface ProcessNode {
+  id: string; // node identifier (same as runId)
+  name: string; // human-readable name
+  status: Status;
+  message: string;
+  timestamp: Date;
+  runId: string;
+  threadId?: string;
+  steps: ProcessStep[];
+  streamingTokens?: string;
+  isExpanded?: boolean;
+  error?: string;
 }
 
 export interface Report {
@@ -88,4 +104,22 @@ export interface Report {
   content: string;
   generatedAt: Date;
   downloadUrl?: string;
+}
+
+interface ScreeningContextType {
+  sessions: ScreeningSession[];
+  currentSession: ScreeningSession | null;
+  processNodes: ProcessNode[];
+  processSteps: ProcessStep[];
+  reports: Report[];
+  isLoading: boolean;
+  createSession: (candidateData: any, jobDescription: any, cvFile?: File) => Promise<string>;
+  updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
+  updateSessionWithExtractedData: (sessionId: string, extractedData: any) => void;
+  addProcessStep: (step: ProcessStep) => void;
+  updateProcessNode: (nodeId: string, updates: Partial<ProcessNode>) => void;
+  toggleNodeExpansion: (nodeId: string) => void;
+  updateCandidateData: (sessionId: string, candidateData: any) => void;
+  generateReport: (sessionId: string, type: Report['type']) => Promise<void>;
+  setCurrentSession: (sessionId: string | null) => void;
 }

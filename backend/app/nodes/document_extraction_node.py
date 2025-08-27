@@ -4,9 +4,6 @@ from ag_ui.core import (
     RunStartedEvent,
     RunFinishedEvent,
     RunErrorEvent,
-    StepStartedEvent,
-    StepFinishedEvent,
-    TextMessageContentEvent,
     EventType
 )
 
@@ -23,11 +20,11 @@ def landingai_extraction_node(state: CVProcessingState):
         dict: Updated state with extracted CV data or error message.
     """
     writer = get_stream_writer()
-    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="document_extraction", run_id="document_extraction"))
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Document Extraction Process", run_id="document_extraction"))
 
     try:
         if not state.get("pdf_path"):
-            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="No PDF path provided"))
+            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="document_extraction -No PDF path provided"))
             return {"error": "No PDF path provided"}
 
         # LandingAI extraction method
@@ -38,9 +35,9 @@ def landingai_extraction_node(state: CVProcessingState):
                  
         state["messages"].append({"type": "success", "content": "CV extracted successfully with LandingAI"})
 
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="document_extraction", run_id="document_extraction", result=cv_data_object))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Document Extraction Process", run_id="document_extraction", result=cv_data_object))
         return {"cv_data": cv_data_object}
 
     except Exception as e:
-        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=str(e)))
+        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"document_extraction - {str(e)}"))
         return {"error": f"LandingAI extraction failed: {str(e)}"}

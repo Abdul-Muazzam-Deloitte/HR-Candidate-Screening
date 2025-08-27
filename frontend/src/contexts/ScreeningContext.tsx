@@ -1,17 +1,29 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ScreeningSession, ProcessStep, Report } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { ScreeningSession, ProcessStep, Report, ProcessNode } from '../types';
+import { apiService } from '../services/apiService';
+
+// interface ScreeningContextType {
+//   sessions: ScreeningSession[];
+//   currentSession: ScreeningSession | null;
+//   processNodes: ProcessNode[];
+//   reports: Report[];
+//   createSession: (candidateData: any, jobDescription: any, cvFile?: File) => Promise<string>;
+//   updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
+//   addProcessStep: (step: ProcessStep) => void;
+//   generateReport: (sessionId: string, type: Report['type']) => Promise<void>;
+//   setCurrentSession: (sessionId: string | null) => void;
+//   startCVExtraction: (sessionId: string, cvFile: File) => Promise<void>;
+// }
 
 interface ScreeningContextType {
-  sessions: ScreeningSession[];
-  currentSession: ScreeningSession | null;
-  processSteps: ProcessStep[];
-  reports: Report[];
-  isLoading: boolean;
-  createSession: (candidateData: any, jobDescription: any) => Promise<string>;
-  updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
-  addProcessStep: (step: ProcessStep) => void;
-  generateReport: (sessionId: string, type: Report['type']) => Promise<void>;
-  setCurrentSession: (sessionId: string | null) => void;
+  sessions: any[];
+  currentSession: any;
+  processNodes: ProcessNode[];
+  reports: any[];
+  createSession: (candidate: any, job: any, file: File) => Promise<string>;
+  extractCVContents: (sessionId: string, cvFile: File) => Promise<void>;
+  setCurrentSession: (session: any) => void;
+  handleWorkflowEvent: (event: any) => void;
 }
 
 const ScreeningContext = createContext<ScreeningContextType | undefined>(undefined);
@@ -23,6 +35,7 @@ export const useScreening = () => {
   }
   return context;
 };
+
 
 interface ScreeningProviderProps {
   children: ReactNode;
@@ -37,7 +50,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
         id: 'candidate-1',
         name: 'John Doe',
         email: 'candidate@email.com',
-        cvFile: new File([''], 'john-doe-cv.pdf'),
         uploadedAt: new Date('2024-01-15'),
         status: 'questions_ready'
       },
@@ -168,168 +180,375 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       updatedAt: new Date('2024-01-18')
     }
   ]);
+  
+  const [processNodes, setProcessNodes] = useState<ProcessNode[]>([
+    // {
+    //   id: 'document_extraction',
+    //   name: 'Document Extraction',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'cv_scoring',
+    //   name: 'CV Scoring',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'social_media_scoring',
+    //   name: 'Social Media Scoring',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'final_candidate_assessment',
+    //   name: 'Final Candidate Assessment',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'send_candidate_report',
+    //   name: 'Send Candidate Report',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'generate_interview_questions',
+    //   name: 'Generate Interview Questions',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'evaluate_interview_answers',
+    //   name: 'Evaluate Interview Answers',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // },
+    // {
+    //   id: 'send_final_scoring',
+    //   name: 'Send Final Scoring',
+    //   status: 'pending',
+    //   steps: [],
+    //   isExpanded: false,
+    //   streamingContent: '',
+    //   isStreaming: false
+    // }
+  ]);
   const [currentSession, setCurrentSessionState] = useState<ScreeningSession | null>(null);
-  const [processSteps, setProcessSteps] = useState<ProcessStep[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Handle CV extraction process
-  useEffect(() => {
-    const handleCVExtraction = (session: ScreeningSession, cvFile: File) => {
-      // Add initial steps
-      addProcessStep({
-        id: `step-upload-${Date.now()}`,
-        name: 'CV Upload',
-        status: 'completed',
-        message: 'CV file uploaded successfully',
-        timestamp: new Date(),
-        progress: 100,
-      });
+  // useEffect(() => {
+  //   const handleCVExtraction = (session: ScreeningSession, cvFile: File) => {
+  //     // Add initial steps
+  //     addProcessStep({
+  //       id: `step-upload-${Date.now()}`,
+  //       name: 'CV Upload',
+  //       status: 'completed',
+  //       message: 'CV file uploaded successfully',
+  //       timestamp: new Date(),
+  //       progress: 100,
+  //     });
 
-      // Start streaming CV extraction
-      const startStreaming = async () => {
-        try {
-          const { apiService } = await import('../services/apiService');
+  //     // Start streaming CV extraction
+  //     const startStreaming = async () => {
+  //       try {
+  //         const { apiService } = await import('../services/apiService');
           
-          await apiService.extractCVContents(cvFile, {
-            onProgress: (data) => {
-              // Handle streaming updates from CopilotKit workflow nodes
-              handleStreamingUpdate(data);
-            },
-            onComplete: (data) => {
-              // Handle final completion
-              updateSessionWithExtractedData(session.id, data);
-              updateSessionStatus(session.id, 'questions_generated');
-            },
-            onError: (error) => {
-              console.error('CV extraction failed:', error);
-              // Mark current step as failed
-              setProcessSteps(prev => prev.map(step => {
-                if (step.status === 'in_progress') {
-                  return { ...step, status: 'failed' as const, message: `Failed: ${error}` };
-                }
-                return step;
-              }));
+  //         await apiService.extractCVContents(cvFile, {
+  //           onProgress: (data) => {
+  //             // Handle streaming updates from CopilotKit workflow nodes
+  //             handleStreamingUpdate(data);
+  //           },
+  //           onComplete: (data) => {
+  //             // Handle final completion
+  //             updateSessionWithExtractedData(session.id, data);
+  //             updateSessionStatus(session.id, 'questions_generated');
+  //           },
+  //           onError: (error) => {
+  //             console.error('CV extraction failed:', error);
+  //             // Mark current step as failed
+  //             setProcessSteps(prev => prev.map(step => {
+  //               if (step.status === 'in_progress') {
+  //                 return { ...step, status: 'failed' as const, message: `Failed: ${error}` };
+  //               }
+  //               return step;
+  //             }));
               
-              // Continue with basic processing
-              setTimeout(() => {
-                updateSessionStatus(session.id, 'questions_generated');
-              }, 1000);
-            }
-          });
-        } catch (error) {
-          console.error('Failed to start CopilotKit streaming:', error);
-        }
-      };
+  //             // Continue with basic processing
+  //             setTimeout(() => {
+  //               updateSessionStatus(session.id, 'questions_generated');
+  //             }, 1000);
+  //           }
+  //         });
+  //       } catch (error) {
+  //         console.error('Failed to start CopilotKit streaming:', error);
+  //       }
+  //     };
 
-      startStreaming();
-    };
+  //     startStreaming();
+  //   };
 
-    const handleStreamingUpdate = (data: any) => {
-      // Handle node status updates
-      if (data.node_name && data.status) {
-        const nodeToStepMapping: Record<string, string> = {
-          'landingai_extraction': 'CV Data Extraction',
-          'cv_scoring': 'CV Analysis',
-          'social_media_screening': 'Social Media Screening',
-          'candidate_assessment_score': 'Final Assessment',
-          'send_candidate_report': 'Report Generation',
-          'interview_questions': 'Question Generation',
-        };
+  //   const handleStreamingUpdate = (data: any) => {
+  //     // Handle node status updates
+  //     if (data.node_name && data.status) {
+  //       const nodeToStepMapping: Record<string, string> = {
+  //         'document_extraction': 'Document Extraction',
+  //         'landingai_extraction': 'CV Data Extraction',
+  //         'cv_scoring': 'CV Analysis',
+  //         'social_media_screening': 'Social Media Screening',
+  //         'candidate_assessment_score': 'Final Assessment',
+  //         'send_candidate_report': 'Report Generation',
+  //         'interview_questions': 'Question Generation',
+  //         'workflow': 'Workflow Processing',
+  //       };
 
-        const stepName = nodeToStepMapping[data.node_name] || data.node_name;
-        const stepId = `step-${data.node_name}-${Date.now()}`;
+  //       const stepName = nodeToStepMapping[data.node_name] || data.node_name;
+  //       const stepId = `step-${data.node_name}-${Date.now()}`;
         
-        setProcessSteps(prev => {
-          const existingStepIndex = prev.findIndex(step => step.name === stepName);
+  //       setProcessSteps(prev => {
+  //         const existingStepIndex = prev.findIndex(step => step.name === stepName);
           
-          if (existingStepIndex >= 0) {
-            // Update existing step
-            return prev.map((step, index) => {
-              if (index === existingStepIndex) {
-                return {
-                  ...step,
-                  status: data.status === 'started' ? 'in_progress' as const :
-                          data.status === 'in_progress' ? 'in_progress' as const :
-                          data.status === 'completed' ? 'completed' as const :
-                          data.status === 'failed' ? 'failed' as const : step.status,
-                  message: data.message || step.message,
-                  progress: data.progress,
-                  timestamp: new Date(data.timestamp || Date.now())
-                };
-              }
-              return step;
-            });
-          } else {
-            // Add new step
-            return [...prev, {
-              id: stepId,
-              name: stepName,
-              status: data.status === 'started' ? 'in_progress' as const :
-                      data.status === 'in_progress' ? 'in_progress' as const :
-                      data.status === 'completed' ? 'completed' as const :
-                      data.status === 'failed' ? 'failed' as const : 'pending' as const,
-              message: data.message || `Processing ${stepName}...`,
-              timestamp: new Date(data.timestamp || Date.now()),
-              progress: data.progress,
-            }];
-          }
-        });
-        return;
-      }
+  //         if (existingStepIndex >= 0) {
+  //           // Update existing step
+  //           return prev.map((step, index) => {
+  //             if (index === existingStepIndex) {
+  //               return {
+  //                 ...step,
+  //                 status: data.status === 'started' ? 'in_progress' as const :
+  //                         data.status === 'in_progress' ? 'in_progress' as const :
+  //                         data.status === 'completed' ? 'completed' as const :
+  //                         data.status === 'failed' ? 'failed' as const : step.status,
+  //                 message: data.message || step.message,
+  //                 progress: data.progress,
+  //                 timestamp: new Date(data.timestamp || Date.now()),
+  //                 runId: data.runId,
+  //                 threadId: data.threadId
+  //               };
+  //             }
+  //             return step;
+  //           });
+  //         } else {
+  //           // Add new step
+  //           return [...prev, {
+  //             id: stepId,
+  //             name: stepName,
+  //             status: data.status === 'started' ? 'in_progress' as const :
+  //                     data.status === 'in_progress' ? 'in_progress' as const :
+  //                     data.status === 'completed' ? 'completed' as const :
+  //                     data.status === 'failed' ? 'failed' as const : 'pending' as const,
+  //             message: data.message || `Processing ${stepName}...`,
+  //             timestamp: new Date(data.timestamp || Date.now()),
+  //             progress: data.progress,
+  //             runId: data.runId,
+  //             threadId: data.threadId
+  //           }];
+  //         }
+  //       });
+  //       return;
+  //     }
 
-      // Map LangGraph node updates to process steps
-      const nodeToStepMapping: Record<string, { name: string; message: string }> = {
-        'text_extraction': { name: 'Text Extraction', message: 'Extracting text from CV...' },
-        'skills_analysis': { name: 'Skills Analysis', message: 'Analyzing candidate skills...' },
-        'job_matching': { name: 'Job Matching', message: 'Matching against job requirements...' },
-        'question_generation': { name: 'Question Generation', message: 'Generating interview questions...' },
-      };
+  //     // Map LangGraph node updates to process steps
+  //     const nodeToStepMapping: Record<string, { name: string; message: string }> = {
+  //       'text_extraction': { name: 'Text Extraction', message: 'Extracting text from CV...' },
+  //       'skills_analysis': { name: 'Skills Analysis', message: 'Analyzing candidate skills...' },
+  //       'job_matching': { name: 'Job Matching', message: 'Matching against job requirements...' },
+  //       'question_generation': { name: 'Question Generation', message: 'Generating interview questions...' },
+  //     };
 
-      // Extract node information from the streaming data
-      const nodeName = data.node_name || Object.keys(data)[0];
-      const stepInfo = nodeToStepMapping[nodeName];
+  //     // Extract node information from the streaming data
+  //     const nodeName = data.node_name || Object.keys(data)[0];
+  //     const stepInfo = nodeToStepMapping[nodeName];
       
-      if (stepInfo) {
-        const stepId = `step-${nodeName}-${Date.now()}`;
+  //     if (stepInfo) {
+  //       const stepId = `step-${nodeName}-${Date.now()}`;
         
-        // Check if step already exists
-        setProcessSteps(prev => {
-          const existingStepIndex = prev.findIndex(step => step.name === stepInfo.name);
+  //       // Check if step already exists
+  //       setProcessSteps(prev => {
+  //         const existingStepIndex = prev.findIndex(step => step.name === stepInfo.name);
           
-          if (existingStepIndex >= 0) {
-            // Update existing step
-            return prev.map((step, index) => {
-              if (index === existingStepIndex) {
-                return {
-                  ...step,
-                  status: data.status === 'completed' ? 'completed' as const : 'in_progress' as const,
-                  message: data.message || stepInfo.message,
-                  progress: data.progress || (data.status === 'completed' ? 100 : undefined),
-                  timestamp: new Date()
-                };
-              }
-              return step;
-            });
-          } else {
-            // Add new step
-            return [...prev, {
-              id: stepId,
-              name: stepInfo.name,
-              status: data.status === 'completed' ? 'completed' as const : 'in_progress' as const,
-              message: data.message || stepInfo.message,
-              timestamp: new Date(),
-              progress: data.progress || (data.status === 'completed' ? 100 : undefined),
-            }];
-          }
-        });
-      }
-    };
+  //         if (existingStepIndex >= 0) {
+  //           // Update existing step
+  //           return prev.map((step, index) => {
+  //             if (index === existingStepIndex) {
+  //               return {
+  //                 ...step,
+  //                 status: data.status === 'completed' ? 'completed' as const : 'in_progress' as const,
+  //                 message: data.message || stepInfo.message,
+  //                 progress: data.progress || (data.status === 'completed' ? 100 : undefined),
+  //                 timestamp: new Date()
+  //               };
+  //             }
+  //             return step;
+  //           });
+  //         } else {
+  //           // Add new step
+  //           return [...prev, {
+  //             id: stepId,
+  //             name: stepInfo.name,
+  //             status: data.status === 'completed' ? 'completed' as const : 'in_progress' as const,
+  //             message: data.message || stepInfo.message,
+  //             timestamp: new Date(),
+  //             progress: data.progress || (data.status === 'completed' ? 100 : undefined),
+  //           }];
+  //         }
+  //       });
+  //     }
+  //   };
 
-    if (currentSession && currentSession.status === 'cv_processing' && currentSession.cvFile) {
-      handleCVExtraction(currentSession, currentSession.cvFile);
+  //   if (currentSession && currentSession.status === 'cv_processing' && currentSession.cvFile) {
+  //     handleCVExtraction(currentSession, currentSession.cvFile);
+  //   }
+  // }, [currentSession?.status, currentSession?.cvFile]);
+
+    function createNodeFromRunStarted(event: any): ProcessNode {
+    return {
+      id: event.runId,
+      name: `${event.threadId}`,
+      status: "in_progress",
+      message: `Executing ${event.threadId}...`,
+      timestamp: new Date(event.timestamp || Date.now()),
+      runId: event.runId,
+      threadId: event.threadId,
+      steps: [],
+      isExpanded: true,
+    };
+  }
+
+  function updateNodeFromRunFinished(node: ProcessNode, event: any): ProcessNode {
+    return {
+      ...node,
+      status: "completed" ,
+      message: `${event.threadId} executed successfully`,
+      timestamp: new Date(event.timestamp || Date.now()),
+      // resultData: typeof event.result === "object" ? event.result : undefined,
+      error: event.status === "failed" ? event.error : undefined,
+    };
+  }
+
+  function createStepFromStepStarted(event: any): ProcessStep {
+    const nodeName = (event.stepName || "").split(" - ");
+    (event.stepName || "").split(" - ")
+    return {
+      id: `step ${nodeName[0]} - ${nodeName[1]}`,
+      name: event.stepName,
+      status: "in_progress",
+      message: `Running ${event.stepName}...`,
+      timestamp: new Date(event.timestamp || Date.now()),
+    };
+  }
+
+  function updateStepFromStepFinished(step: ProcessStep, event: any): ProcessStep {
+    return {
+      ...step,
+      status:  "completed" ,
+      message: event.stepName,
+      timestamp: new Date(event.timestamp || Date.now()),
+    };
+  }
+
+  function updateNodeOnError(node: ProcessNode, message: any): ProcessNode {
+  return {
+    ...node,
+    status: "error", // mark node as error
+    message: "An error occurred during the node run",
+    timestamp: new Date(Date.now()),
+    error: message || "Unknown error",
+  };
+}
+
+    // Extract CV contents using API
+  const extractCVContents = async (sessionId: string, cvFile: File) => {
+    setIsProcessing(true);
+    try {
+      await apiService.extractCVContents(cvFile, handleWorkflowEvent);
+    } finally {
+      setIsProcessing(false);
     }
-  }, [currentSession?.status, currentSession?.cvFile]);
+  };
+
+
+  // --- Helper: reset workflow steps (new candidate etc.)
+  const handleWorkflowEvent = (event: any) => {
+
+    setProcessNodes(prevNodes => {
+      switch (event.type) {
+        case "RUN_STARTED": {
+          const newNode = createNodeFromRunStarted(event);
+          return [...prevNodes, newNode];
+        }
+
+        case "RUN_FINISHED": {
+          return prevNodes.map(node =>
+            node.runId === event.runId ? updateNodeFromRunFinished(node, event) : node
+          );
+        }
+
+        case "STEP_STARTED": {
+          const nodeName = (event.stepName || "").split(" - ");
+          return prevNodes.map(node => {
+            if (node.runId === nodeName[1]) {
+              const newStep = createStepFromStepStarted(event);
+              return { ...node, steps: [...node.steps, newStep] };
+            }
+            return node;
+          });
+        }
+
+        case "STEP_FINISHED": {
+          const nodeName = (event.stepName || "").split(" - ");
+          return prevNodes.map(node => {
+            if (node.runId === nodeName[1]) {
+              return {
+                ...node,
+                steps: node.steps.map(step => 
+                  step.id === `step ${nodeName[0]} - ${nodeName[1]}` ? updateStepFromStepFinished(step, event) : step
+                ),
+              };
+            }
+            return node;
+          });
+        }
+
+        case "RUN_ERROR": {
+          const [nodeName, ...messageParts] = (event.message || "").split(" - ");
+          const errorMessage = messageParts.join(" - ") || event.message;
+          return prevNodes.map(node =>
+            node.runId === nodeName ? updateNodeOnError(node, errorMessage) : node
+          );
+        }
+
+        default:
+          console.warn("Unknown workflow event:", event);
+          return prevNodes;
+      }
+    });
+  };
+
+  const resetNodes = () => setProcessNodes([]);
 
   const createSession = async (candidateData: any, jobDescription: any, cvFile?: File): Promise<string> => {
     setIsLoading(true);
@@ -353,7 +572,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 
     setSessions(prev => [...prev, newSession]);
     setCurrentSessionState(newSession);
-    setProcessSteps([]);
+    setProcessNodes([]);
     setIsLoading(false);
 
     return newSession.id;
@@ -466,10 +685,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     }
   };
 
-  const addProcessStep = (step: ProcessStep) => {
-    setProcessSteps(prev => [...prev, step]);
-  };
-
   const generateReport = async (sessionId: string, type: Report['type']) => {
     const newReport: Report = {
       id: Date.now().toString(),
@@ -492,19 +707,33 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     }
   };
 
-  const value: ScreeningContextType = {
-    sessions,
-    currentSession,
-    processSteps,
-    reports,
-    isLoading,
-    createSession,
-    updateSessionStatus,
-    updateSessionWithExtractedData,
-    addProcessStep,
-    generateReport,
-    setCurrentSession,
-  };
+  // const value: ScreeningContextType = {
+  //   sessions,
+  //   currentSession,
+  //   processNodes,
+  //   reports,
+  //   isLoading,
+  //   createSession,
+  //   updateSessionStatus,
+  //   addProcessStep,
+  //   setCurrentSession,
+  //   startCVExtraction
+  // };
 
-  return <ScreeningContext.Provider value={value}>{children}</ScreeningContext.Provider>;
+    const value: ScreeningContextType = {
+      sessions,
+      createSession,
+      processNodes,
+      handleWorkflowEvent,
+      extractCVContents,
+      currentSession,
+      reports,
+      setCurrentSession,
+    };
+
+  return (
+    <ScreeningContext.Provider value={value}>
+      {children}
+    </ScreeningContext.Provider>
+  );
 };

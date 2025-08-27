@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CopilotKit } from "@copilotkit/react-core";
 import { AuthProvider } from './contexts/AuthContext';
 import { ScreeningProvider } from './contexts/ScreeningContext';
 import { JobDescriptionProvider } from './contexts/JobDescriptionContext';
@@ -16,86 +15,78 @@ import { SessionDetailsPage } from './components/session/SessionDetailsPage';
 
 function App() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
-      <AuthProvider>
+    <AuthProvider>
+      <ScreeningProvider>
         <JobDescriptionProvider>
-          <ScreeningProvider>
-            <Router>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<LoginPage />} />
-                
-                {/* Protected Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Dashboard />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route
-                  path="/new-screening"
-                  element={
-                    <ProtectedRoute requiredRole="hr">
-                      <Layout>
-                        <NewScreeningPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route
-                  path="/job-descriptions"
-                  element={
-                    <ProtectedRoute requiredRole="hr">
-                      <Layout>
-                        <JobDescriptionsPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route
-                  path="/interview/:sessionId"
-                  element={
-                    <ProtectedRoute requiredRole="candidate">
+          <Router>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/new-screening"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <NewScreeningPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/job-descriptions"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <JobDescriptionsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/candidate-details/:sessionId"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SessionDetailsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/interview/:sessionId"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
                       <InterviewScreen />
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route
-                  path="/interview/:sessionId/completed"
-                  element={
-                    <ProtectedRoute requiredRole="candidate">
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/interview-completed/:sessionId"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
                       <InterviewCompleted />
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route
-                  path="/candidate-details/:sessionId"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <SessionDetailsPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                
-                {/* Default redirect */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Router>
-          </ScreeningProvider>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
         </JobDescriptionProvider>
-      </AuthProvider>
-    </CopilotKit>
+      </ScreeningProvider>
+    </AuthProvider>
   );
 }
 

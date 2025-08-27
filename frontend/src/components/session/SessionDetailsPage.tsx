@@ -7,7 +7,7 @@ import { ProcessTracker } from '../dashboard/ProcessTracker';
 export const SessionDetailsPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { sessions, processSteps } = useScreening();
+  const { sessions, processNodes = [] } = useScreening();
 
   const session = sessions.find(s => s.id === sessionId);
 
@@ -121,7 +121,7 @@ export const SessionDetailsPage: React.FC = () => {
           <div className="lg:col-span-2">
             <ProcessTracker
               session={session}
-              steps={processSteps}
+              nodes={processNodes}
             />
           </div>
         </div>

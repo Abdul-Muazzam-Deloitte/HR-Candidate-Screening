@@ -121,41 +121,14 @@ async def agui_ws(ws: WebSocket):
         with open(file_location, "wb") as f:
             f.write(base64.b64decode(file_content))
 
-        # Notify frontend run started
-        # await ws.send_text(encoder.encode(
-        #     RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread1", run_id="run1")
-        # ))
+        # async for update in hr_screening_workflow(file_location):
+        #     await ws.send_text( encoder.encode(update))
 
-        # # Run the workflow and stream events
-        # async for event in hr_screening_workflow(file_location, ws=ws, encoder=encoder):
-        #     await ws.send_text(encoder.encode(event))
+        document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
+        result = await document_Extractor.extract_cv_info()
 
-        # result = hr_screening_workflow(file_location, ws=ws, encoder=encoder)
-        # print(result)
+        print(result)
 
-        async for update in hr_screening_workflow(file_location):
-
-            print("Update received:", update)
-            # try:
-            #     # If AG-UI Pydantic event, use .model_dump() or .json()
-            #     if hasattr(update, "model_dump"):
-            #         await ws.send_text(update.model_dump_json())
-            #     else:
-            #         await ws.send_text(json.dumps(update))
-            # except Exception as e:
-            #     await ws.send_text(json.dumps({"type": "error", "message": str(e)}))
-
-            await ws.send_text( # Send raw JSON string directly
-                encoder.encode(update)
-                )
-
-        # document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
-        # result = await document_Extractor.extract_cv_info()
-
-        # Run finished
-        # await ws.send_text(encoder.encode(
-        #     RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1", result=result)
-        # ))
         await ws.close()
 
     except WebSocketDisconnect:
