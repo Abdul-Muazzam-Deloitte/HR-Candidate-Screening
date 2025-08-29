@@ -95,6 +95,7 @@ export interface ProcessNode {
   streamingTokens?: string;
   isExpanded?: boolean;
   error?: string;
+  result?: any;
 }
 
 export interface Report {

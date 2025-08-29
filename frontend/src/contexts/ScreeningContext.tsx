@@ -444,7 +444,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       status: "completed" ,
       message: `${event.threadId} executed successfully`,
       timestamp: new Date(event.timestamp || Date.now()),
-      // resultData: typeof event.result === "object" ? event.result : undefined,
+      result: typeof event.result === "object" ? event.result : undefined,
       error: event.status === "failed" ? event.error : undefined,
     };
   }
