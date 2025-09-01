@@ -121,13 +121,13 @@ async def agui_ws(ws: WebSocket):
         with open(file_location, "wb") as f:
             f.write(base64.b64decode(file_content))
 
-        # async for update in hr_screening_workflow(file_location):
-        #     await ws.send_text( encoder.encode(update))
+        async for update in hr_screening_workflow(file_location):
+            await ws.send_text( encoder.encode(update))
 
-        document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
-        result = await document_Extractor.extract_cv_info()
+        # document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
+        # result = await document_Extractor.extract_cv_info()
 
-        print(result)
+        # print(result)
 
         await ws.close()
 

@@ -46,7 +46,7 @@ class DocumentExtractor():
 
         # return self.convert_pdf_to_markdown_landing_ai_api()
 
-    async def convert_pdf_to_markdown_landing_ai(self, ws: WebSocket, encoder: EventEncoder):
+    async def convert_pdf_to_markdown_landing_ai(self, ws: WebSocket, encoder: EventEncoder) -> Candidate:
         """Extracts candidate information from a PDF using Landing AI.
 
         Args:
@@ -67,11 +67,8 @@ class DocumentExtractor():
             # Extract candidte info from CV in pdf format using Landing AI
             # filepath: path of CV
             # extraction_model: extract specific data from pdf based on Candidate class        
-            # parsed_docs = parse(self.filepath, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
-            # fields = parsed_docs[0].extraction
-
-            print('test')
-            await asyncio.sleep(5)
+            parsed_docs = parse(self.filepath, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
+            fields = parsed_docs[0].extraction
 
             # await StepFinishedEvent(type= EventType.STEP_FINISHED, stepName= "Parse_cv_finish").send(ws)
 
@@ -110,15 +107,15 @@ class DocumentExtractor():
 
 
             await ws.send_text(encoder.encode(
-            RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Document Extraction Process", run_id="document_extraction", result='fields' )))
-            return "fields"
+            RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Document Extraction Process", run_id="document_extraction", result=fields )))
+            return fields
 
         except Exception as e:
             print('Error in convert_pdf_to_markdown_landing_ai:', str(e))
             await ws.send_text(encoder.encode(
             RunErrorEvent(type=EventType.RUN_ERROR, message=f"document_extraction - {str(e)}")))
             
-            return 'error'
+            return Candidate()
 
     def convert_pdf_to_markdown_landing_ai_api(self):
         """

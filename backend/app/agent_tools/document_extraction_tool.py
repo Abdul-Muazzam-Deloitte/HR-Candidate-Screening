@@ -35,12 +35,12 @@ def convert_pdf_to_markdown_landing_ai(pdf_path: str) -> Candidate:
         # extraction_model: extract specific data from pdf based on Candidate class 
         writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - document_extraction - Parsing CV contents ..."))       
         parsed_docs = parse(pdf_path, extraction_model=Candidate, include_metadata_in_markdown=True, include_marginalia=True)
-        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - document_extraction - Parsing CV contents completed"))
+        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - document_extraction - Parsing CV contents completed successfully"))
 
 
         writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="2 - document_extraction - Extracting CV contents..."))
         fields = parsed_docs[0].extraction
-        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="2 - document_extraction - Extracting CV contents"))
+        writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="2 - document_extraction - Extracting CV contents completed successully"))
 
         # Return data into JSON
         # return fields.model_dump()

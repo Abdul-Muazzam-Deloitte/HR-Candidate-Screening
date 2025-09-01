@@ -1,12 +1,16 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class ScoreDetail(BaseModel):
     """Individual scoring detail with score and notes"""
+    model_config = ConfigDict(extra="ignore") 
+
     score: int = Field(description="Score out of 5", ge=1, le=5)
     notes: str = Field(description="Detailed notes explaining the score")
 
 class CVScore(BaseModel):
     """CV scoring result matching the detailed template"""
+    model_config = ConfigDict(extra="ignore")
+    
     technical_skills: ScoreDetail = Field(description="Technical skills assessment")
     experience_relevance: ScoreDetail = Field(description="Experience relevance to the role")
     years_experience: ScoreDetail = Field(description="Years of experience evaluation")

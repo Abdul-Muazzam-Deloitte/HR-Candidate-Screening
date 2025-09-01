@@ -21,10 +21,10 @@ def cv_scoring_node(state: CVProcessingState):
         dict: Updated state with CV score or error message.
     """
     writer = get_stream_writer()
-    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread3", run_id="run3"))
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Candidate CV Scoring Process", run_id="cv_scoring"))
     try:
         if state.get("error") or (not state.get("cv_data") or not state.get("job_description")):
-            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="No CV data available for scoring"))
+            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="cv_scoring - No CV data available for scoring"))
             return {"error": "No CV data available for scoring"}
 
         # Call the async scoring tool with streaming
@@ -35,9 +35,9 @@ def cv_scoring_node(state: CVProcessingState):
 
         # Append success message
         state["messages"].append({"type": "success", "content": "CV scored"})
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread3", run_id="run3", result=score_result_object))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Candidate CV Scoring Process", run_id="cv_scoring", result=score_result_object))
         return {"cv_score": score_result_object}
 
     except Exception as e:
-        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=str(e)))
+        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"cv_scoring - {str(e)}"))
         return {"error": f"CV scoring failed: {str(e)}"}

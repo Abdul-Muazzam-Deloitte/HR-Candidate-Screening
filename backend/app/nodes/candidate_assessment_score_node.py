@@ -23,10 +23,10 @@ def candidate_assessment_score_node(state: CVProcessingState):
         dict: Updated state with candidate final score or error message.
     """
     writer = get_stream_writer()
-    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread5", run_id="run5"))
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Candidate's Final Assessment Process", run_id="candidate_assessment"))
     try:
         if state.get("error") or not state.get("cv_score"): 
-            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="No scoring available for this candidate."))
+            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="candidate_assessment - No scoring available for this candidate."))
             return {"error": "No scoring available for this candidate."}
         
         final_score_object = candiate_assessment_process.invoke({
@@ -38,11 +38,11 @@ def candidate_assessment_score_node(state: CVProcessingState):
 
         # return state
         state["messages"].append({"type": "success", "content": f"Final Assessment score successful"})
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread5", run_id="run5", result=final_score_object))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Candidate's Final Assessment Process", run_id="candidate_assessment", result=final_score_object))
         return {"candidate_final_score" : final_score_object}
     
     except Exception as e:
         state["messages"].append({"type": "error", "content": f"Candidate assessment score node failed: {str(e)}"})
-        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=str(e)))
+        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"candidate_assessment - {str(e)}"))
         # return state
         return {"error": f"Candidate assessment score node failed: {str(e)}"}

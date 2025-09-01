@@ -28,19 +28,40 @@ google.generativeai.configure()
 # openai_key = "<open-ai-key>"
 # openai.api_key = openai_key
 # model = "gpt-3.5-turbo"
+from ag_ui.core import TextMessageStartEvent, TextMessageContentEvent, TextMessageEndEvent, StepStartedEvent, StepFinishedEvent, EventType
+from langchain_core.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks.manager import CallbackManager
+import uuid
+import re
+from langgraph.config import get_stream_writer
+
+class AGUIStreamingCallback(BaseCallbackHandler):
+    """Streams tokens to AG-UI events in real-time."""
+
+    def __init__(self, writer, node_id: str):
+        self.writer = writer
+        self.node_id = node_id
+
+    def on_llm_new_token(self, token: str, **kwargs):
+        if token.strip():
+            self.writer(TextMessageContentEvent(
+                type=EventType.TEXT_MESSAGE_CONTENT,
+                message_id=self.node_id,
+                delta=token
+            ))
 
 class ChatCompletionHandler:
 
     def __init__(self):
         """Initialize the ChatCompletionHandler with the LLM and prompt template."""
 
-        self.llm = ChatOpenAI(
-            model=model,
-            api_key=google_api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            temperature=0.5,
-            streaming=True
-        )
+        # self.llm = ChatOpenAI(
+        #     model=model,
+        #     api_key=google_api_key,
+        #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        #     temperature=0.5,
+        #     streaming=True
+        # )
 
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", "{system_message}"),
@@ -48,8 +69,9 @@ class ChatCompletionHandler:
         ])
 
         self.chain: Runnable | None = None
+    
 
-    def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel]):
+    def run_chain(self, system_message: str, user_message: str , output_model: type[BaseModel], node_id: str):
         """
         Construct the langChain chain to invoke a call to the LLM
 
@@ -62,14 +84,57 @@ class ChatCompletionHandler:
             Parsed output as an instance of output_model.
         """
 
-        self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
+        writer = get_stream_writer()
+        writer(TextMessageStartEvent(
+            type=EventType.TEXT_MESSAGE_START,
+            message_id=node_id,
+            role="assistant"
+        ))
+        # self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
 
-        response = self.chain.invoke({
+        # response = self.chain.invoke({
+        #     "system_message": system_message,
+        #     "user_message": user_message
+        # })
+
+        # return response.model_dump()
+
+        """Run LLM with AG-UI streaming events."""
+        callback_manager = CallbackManager([AGUIStreamingCallback(writer, node_id)])
+
+        llm = ChatOpenAI(
+            model=model,
+            api_key=google_api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            temperature=0.5,
+            streaming=True,
+            callback_manager = callback_manager
+        )
+
+        self.chain = self.prompt_template | llm
+
+        raw_response = self.chain.invoke({
             "system_message": system_message,
             "user_message": user_message
         })
 
-        return response.model_dump()
+        def strip_code_block(text: str) -> str:
+            """Remove Markdown code fences (```json ... ```) if present."""
+            match = re.search(r"```(?:json)?\n(.*?)```", text, re.DOTALL)
+            return match.group(1).strip() if match else text.strip()
+
+        # Parse final string into Pydantic model
+        final_text = str(raw_response.content)
+        print(output_model.model_json_schema())
+        clean_json = strip_code_block(final_text)
+        parsed_model = output_model.model_validate_json(clean_json, strict=False)
+
+        writer(TextMessageEndEvent(
+            type=EventType.TEXT_MESSAGE_END,
+            message_id=node_id
+        ))
+
+        return parsed_model.model_dump()
 
     @staticmethod
     def get_response_gemini(system_message: str, user_message: str) -> str:

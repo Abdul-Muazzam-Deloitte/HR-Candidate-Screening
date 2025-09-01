@@ -5,6 +5,20 @@ from app.models.candidate_assessment import CandidateFinalScore
 from app.models.score_result import CVScore
 from typing import Optional
 
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+
+from langgraph.config import get_stream_writer
+
+
 @tool
 def candiate_assessment_process(candidate_cv_score: CVScore
                                 , candidate_social_score: Optional[str] | None
@@ -19,7 +33,8 @@ def candiate_assessment_process(candidate_cv_score: CVScore
     Returns:
         CandidateFinalScore: Final assessment score for the candidate.
     """
-    print(f"Candidate CV Score: {candidate_cv_score}")
+    writer = get_stream_writer()
+    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - candidate_assessment - Generating candidate final assessment score..."))  
     system_message = open("app/knowledge_base/scoring_process/system_message.txt").read()
     user_message = open("app/knowledge_base/scoring_process/candidate_assessment_template.txt").read()
 
@@ -34,4 +49,7 @@ def candiate_assessment_process(candidate_cv_score: CVScore
     )
 
     handler = ChatCompletionHandler()
-    return handler.run_chain(system_message,formatted_user_message,output_model=CandidateFinalScore)
+    result =  handler.run_chain(system_message,formatted_user_message,output_model=CandidateFinalScore, node_id="candidate_assessment")
+
+    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - candidate_assessment - Generating CV score completed successfully"))  
+    return CandidateFinalScore(**result)

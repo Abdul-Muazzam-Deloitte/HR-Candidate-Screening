@@ -4,6 +4,19 @@ from app.llm_handler.llm_handler import ChatCompletionHandler
 from app.models.candidate_report import CandidateReport
 from app.models.candidate_assessment import CandidateFinalScore
 
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+
+from langgraph.config import get_stream_writer
+
 @tool
 def generate_candidate_report(candidate_cv_data: str, candidate_final_score: CandidateFinalScore):
     """Generate a candidate report based on CV data and final score.
@@ -15,6 +28,8 @@ def generate_candidate_report(candidate_cv_data: str, candidate_final_score: Can
     Returns:
         CandidateReport: The generated candidate report.
     """
+    writer = get_stream_writer()
+    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - report_generation - Generating candidate's report..."))  
     system_message = open("app/knowledge_base/scoring_process/system_message.txt").read()
     user_message = open("app/knowledge_base/scoring_process/candidate_report_template.txt").read()
 
@@ -29,4 +44,8 @@ def generate_candidate_report(candidate_cv_data: str, candidate_final_score: Can
     )
 
     handler = ChatCompletionHandler()
-    return handler.run_chain(system_message,formatted_user_message,output_model=CandidateReport)
+    result =  handler.run_chain(system_message,formatted_user_message,output_model=CandidateReport,node_id="report_generation")
+    print (result)
+
+    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - report_generation - Generating candidate's report completed successfully"))  
+    return result

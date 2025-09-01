@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.models.score_result import ScoreDetail
 
 class SocialMediaScore(BaseModel):
     """Social media screening result"""
+    model_config = ConfigDict(extra="ignore")
+
     professional_presence: ScoreDetail = Field(description="Professional online presence assessment")
     content_quality: ScoreDetail = Field(description="Quality and appropriateness of shared content")
     industry_engagement: ScoreDetail = Field(description="Engagement with industry-related topics and discussions")

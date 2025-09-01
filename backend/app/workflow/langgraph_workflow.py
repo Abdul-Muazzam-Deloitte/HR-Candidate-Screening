@@ -72,7 +72,7 @@ def create_cv_scoring_workflow():
             return "error_handler"
         
         final_score = state.get("candidate_final_score")
-        if final_score and final_score["proceed_to_interview"] == "Yes":
+        if final_score and final_score.proceed_to_interview == "Yes":
             return "interview_questions"
         else:
              return END
@@ -175,23 +175,11 @@ async def hr_screening_workflow(pdf_path: str):
 
     try:
 
-        print("Starting workflow execution...")
-      
-        # result = workflow_graph.invoke(
-        #     initial_state
-        # )
-
         # Stream workflow node updates
         for chunk in workflow_graph.stream(
             initial_state,
             stream_mode= "custom"
         ):
-            print(type(chunk))
-            # if hasattr(chunk, "model_dump"):
-            #     yield chunk.model_dump()
-            # else:
-            # # Fallback: serialize as dict/JSON
-            #     yield json.dumps(chunk)
 
             if isinstance(chunk, dict):
                 event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data=chunk)
@@ -201,22 +189,6 @@ async def hr_screening_workflow(pdf_path: str):
                 event_to_send = chunk
 
             yield event_to_send
-            # # Convert Pydantic model or dict to JSON string
-            # if hasattr(chunk, "model_dump"):  # Pydantic model
-            #     chunk_dict = chunk.model_dump()
-            # else:
-            #     chunk_dict = dict(chunk)
-
-            # print(chunk_dict)
-            # yield chunk_dict
-            # yield chunk.model_dump()
-            # await chunk
-
-        # yield initial_state
-
-        # await ws.send_text(encoder.encode(
-        #     RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread1", run_id="run1", result=initial_state)
-        # ))
 
     except Exception as e:
         yield RunErrorEvent(type=EventType.RUN_ERROR, message=str(e))

@@ -44,6 +44,7 @@ Regenerate a **new set of high-quality interview questions**, ensuring:
 
 ---
 
-Return your output strictly in the following JSON format:
-
+IMPORTANT: You must respond with valid JSON that matches this exact structure:
 {output_model_structure}
+
+Return only the JSON response without any markdown formatting or additional text.

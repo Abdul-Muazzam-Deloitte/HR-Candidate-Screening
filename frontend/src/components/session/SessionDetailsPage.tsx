@@ -7,11 +7,15 @@ import { ProcessTracker } from '../dashboard/ProcessTracker';
 export const SessionDetailsPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { sessions, processNodes = [] } = useScreening();
+  const { currentSession, processNodes = [], resetCurrentSession } = useScreening();
 
-  const session = sessions.find(s => s.id === sessionId);
+  const dashboardClick = () => {
+    resetCurrentSession();
+    navigate('/dashboard');
 
-  if (!session) {
+  };
+
+  if (!currentSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -27,7 +31,6 @@ export const SessionDetailsPage: React.FC = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -36,7 +39,7 @@ export const SessionDetailsPage: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => dashboardClick()}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -46,7 +49,7 @@ export const SessionDetailsPage: React.FC = () => {
                   Candidate Details
                 </h1>
                 <p className="text-sm text-gray-500">
-                  {session.candidate.name} - {session.jobDescription.title}
+                  {currentSession.candidate.name} - {currentSession.jobDescription.title}
                 </p>
               </div>
             </div>
@@ -67,7 +70,7 @@ export const SessionDetailsPage: React.FC = () => {
                   <User className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Candidate</p>
-                    <p className="text-sm text-gray-600">{session.candidate.name}</p>
+                    <p className="text-sm text-gray-600">{currentSession.candidate.name}</p>
                     { /* <p className="text-xs text-gray-500">{session.candidate.email}</p> */ }
                   </div>
                 </div>
@@ -76,8 +79,8 @@ export const SessionDetailsPage: React.FC = () => {
                   <Briefcase className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Position</p>
-                    <p className="text-sm text-gray-600">{session.jobDescription.title}</p>
-                    <p className="text-xs text-gray-500">{session.jobDescription.department}</p>
+                    <p className="text-sm text-gray-600">{currentSession.jobDescription.title}</p>
+                    <p className="text-xs text-gray-500">{currentSession.jobDescription.department}</p>
                   </div>
                 </div>
 
@@ -86,41 +89,90 @@ export const SessionDetailsPage: React.FC = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Created</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(session.createdAt).toLocaleDateString()}
+                      {new Date(currentSession.createdAt).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(session.createdAt).toLocaleTimeString()}
+                      {new Date(currentSession.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
 
-                {session.result.score > 0 && (
+                {currentSession.result.score > 0 && (
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm font-medium text-gray-900 mb-2">Match Score</p>
                     <div className="flex items-center space-x-2">
                       <div className="flex-1 bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
-                            session.result.score >= 70 ? 'bg-green-500' : 
-                            session.result.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                            currentSession.result.score >= 70 ? 'bg-green-500' : 
+                            currentSession.result.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
-                          style={{ width: `${session.result.score}%` }}
+                          style={{ width: `${currentSession.result.score}%` }}
                         ></div>
                       </div>
                       <span className="text-sm font-medium text-gray-900">
-                        {session.result.score}%
+                        {currentSession.result.score}%
                       </span>
                     </div>
                   </div>
                 )}
               </div>
+              
+              {/* Additional Candidate Information */}
+              {(currentSession.candidate.summary || currentSession.candidate.skills || currentSession.candidate.linkedinUrl) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Extracted Information</h3>
+                  
+                  {currentSession.candidate.summary && (
+                    <div className="mb-4">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Summary</p>
+                      <p className="text-sm text-gray-700">{currentSession.candidate.summary}</p>
+                    </div>
+                  )}
+                  
+                  {currentSession.candidate.skills && currentSession.candidate.skills.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Skills</p>
+                      <div className="flex flex-wrap gap-1">
+                        {currentSession.candidate.skills.slice(0, 6).map((skill, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex px-2 py-1 rounded text-xs bg-blue-100 text-blue-700"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {currentSession.candidate.skills.length > 6 && (
+                          <span className="inline-flex px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
+                            +{currentSession.candidate.skills.length - 6} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {currentSession.candidate.linkedinUrl && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">LinkedIn</p>
+                      <a
+                        href={currentSession.candidate.linkedinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-700 underline"
+                      >
+                        {currentSession.candidate.linkedinUrl}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Process Tracker */}
           <div className="lg:col-span-2">
             <ProcessTracker
-              session={session}
+              session={currentSession}
               nodes={processNodes}
             />
           </div>

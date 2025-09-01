@@ -9,6 +9,19 @@ import json
 
 load_dotenv(override=True)
 
+from ag_ui.core import (
+    RunStartedEvent,
+    RunFinishedEvent,
+    RunErrorEvent,
+    StepStartedEvent,
+    StepFinishedEvent,
+    TextMessageContentEvent,
+    EventType
+)
+
+
+from langgraph.config import get_stream_writer
+
 @tool
 def get_social_media_presence(social_url: Optional[str]):
     """Fetch social media presence data for a given URL.
@@ -19,6 +32,9 @@ def get_social_media_presence(social_url: Optional[str]):
     Returns:
         dict: Extracted social media presence data.
     """
+
+    writer = get_stream_writer()
+    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - social_media_screening - Initializing web crawl..."))  
     system_message = open("app/knowledge_base/scoring_process/social_media_scoring_template.txt").read()
 
     # 1. Define the LLM extraction strategy
@@ -31,7 +47,8 @@ def get_social_media_presence(social_url: Optional[str]):
         overlap_rate=0.35,
         apply_chunking=True,
         input_format="markdown",   # or "html", "fit_markdown"
-        extra_args={"temperature": 0.5, "max_tokens": 800}
+        extra_args={"temperature": 0.5, "max_tokens": 800},
+        streaming=True
     )
 
     # 2. Build the crawler config
@@ -42,7 +59,9 @@ def get_social_media_presence(social_url: Optional[str]):
 
     # 3. Create a browser config if needed
     browser_cfg = BrowserConfig(headless=True)
+    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - social_media_screening - Web Craw Initialization completed successfully")) 
 
+    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="2 - social_media_screening - Retrieving social media data..."))  
     async def _fetch():
         async with AsyncWebCrawler(config=browser_cfg) as crawler:
 
@@ -66,5 +85,7 @@ def get_social_media_presence(social_url: Optional[str]):
 
     # Run the async crawl synchronously
     content = asyncio.run(_fetch())
+
+    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="2 - social_media_screening - Retrieving social media data completed successfully"))  
     # (Optionally) trim or process content if needed
     return content

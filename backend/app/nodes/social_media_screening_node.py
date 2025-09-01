@@ -23,13 +23,13 @@ def social_media_screening_node(state: CVProcessingState):
     """
 
     writer = get_stream_writer()
-    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="thread4", run_id="run4"))
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Social Media Screening Process", run_id="social_media_screening"))
 
     try:
         if state.get("error") or not state.get("cv_data").linkedin_url:
         # if state.get("error") or not state.get("cv_data")["linkedin_url"]:
             # return state
-            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread4", run_id="run4"))
+            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening"))
             return state["messages"].append({"type": "warning", "content": "No LinkedIn URL available for screening"})
 
         social_score_dict = get_social_media_presence.invoke({
@@ -38,20 +38,20 @@ def social_media_screening_node(state: CVProcessingState):
         })
 
         if not social_score_dict:
-            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread4", run_id="run4"))
+            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening"))
             return {"social_media_score": None}
         
         # Check if the result contains an error
         if "error" in social_score_dict:
-            writer( RunErrorEvent(type=EventType.RUN_ERROR, message="Error in social media screening process") ) 
+            writer( RunErrorEvent(type=EventType.RUN_ERROR, message="social_media_screening - Error in social media screening process") ) 
             return {"error": "Error in social media screening process"}
         
         # Validate with Pydantic
         state["messages"].append({"type": "success", "content": "Social media screening completed"})
         
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="thread4", run_id="run4", result=social_score_dict))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening", result=social_score_dict))
         return {"social_media_score": social_score_dict}
         
     except Exception as e:
-        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=str(e)))
+        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"social_media_screening - {str(e)}"))
         return {"error": f"Social media screening node failed: {str(e)}"}
