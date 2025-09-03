@@ -56,7 +56,7 @@ export const InterviewCompleted: React.FC = () => {
             </ul>
           </div>
 
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <button
               onClick={handleDownloadReport}
               className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
@@ -72,7 +72,7 @@ export const InterviewCompleted: React.FC = () => {
               <Home className="w-4 h-4" />
               <span>Back to Dashboard</span>
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

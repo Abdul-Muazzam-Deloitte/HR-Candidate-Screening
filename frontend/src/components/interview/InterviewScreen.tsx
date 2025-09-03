@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Send, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Clock, Send, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
-import { Question, Answer } from '../../types';
+import { Answer, Question } from '../../types';
 
 export const InterviewScreen: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -10,46 +10,48 @@ export const InterviewScreen: React.FC = () => {
   const { sessions, updateSessionStatus } = useScreening();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [timeLeft, setTimeLeft] = useState<Record<string, number>>({});
+  const [interviewQuestions, setInterviewQuestions] = useState<Question[]>([]);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [page, setPage] = useState(0); // pagination state
+  const pageSize = 10; // how many question buttons per page
+
   const session = sessions.find(s => s.id === sessionId);
-  const questions = session?.result.questions || [];
+  const questions = session?.questions?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Initialize timers for each question
+  // Initialize timer
   useEffect(() => {
-    if (questions.length > 0) {
-      const initialTime: Record<string, number> = {};
-      questions.forEach(q => {
-        initialTime[q.id] = q.timeLimit * 60; // Convert minutes to seconds
-      });
-      setTimeLeft(initialTime);
-    }
-  }, [questions]);
+    if (!session?.questions?.interview_duration) return;
 
-  // Timer countdown
+      const initialQuestions = questions.map(q => ({
+        ...q,
+        answer: q.answer || undefined,
+      }));
+
+      setInterviewQuestions(initialQuestions);
+
+    const durationParts = session.questions.interview_duration.split(' ');
+    const minutes = parseInt(durationParts[0]) || 60;
+    setTimeLeft(minutes * 60);
+  }, [session]);
+
+  // Countdown
   useEffect(() => {
-    if (!currentQuestion) return;
-
+    if (timeLeft <= 0) return;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        const newTime = { ...prev };
-        if (newTime[currentQuestion.id] > 0) {
-          newTime[currentQuestion.id] -= 1;
-        } else {
-          // Auto-move to next question when time runs out
-          if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-          }
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
         }
-        return newTime;
+        return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [currentQuestion, currentQuestionIndex, questions.length]);
+  }, [timeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -57,65 +59,70 @@ export const InterviewScreen: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Update answer directly on currentQuestion object
   const handleAnswerChange = (value: string) => {
     if (currentQuestion) {
-      setAnswers(prev => ({
-        ...prev,
-        [currentQuestion.id]: value
-      }));
+      console.log("updating answer")
+      currentQuestion.answer = value;
+      setInterviewQuestions(prev =>
+        prev.map(q =>
+          q.id === currentQuestion.id
+            ? {
+                ...q,
+                answer: value,
+                submittedAt: new Date(),
+              }
+            : q
+        )
+      ); // trigger re-render
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      // auto-adjust page when moving forward
+      if (nextIndex >= (page + 1) * pageSize) {
+        setPage(p => p + 1);
+      }
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      // auto-adjust page when moving back
+      if (prevIndex < page * pageSize) {
+        setPage(p => Math.max(p - 1, 0));
+      }
     }
   };
 
   const handleSubmit = async () => {
     if (!session) return;
-
     setIsSubmitting(true);
-    
-    // Simulate submission delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Update session status
-    updateSessionStatus(session.id, 'completed');
-    
-    // Navigate to completion page
-    navigate(`/interview/${sessionId}/completed`);
+    updateSessionStatus(session.id, 'interview_completed');
+    navigate(`/interview-completed/${sessionId}`);
   };
 
   const getQuestionTypeColor = (type: Question['type']) => {
     switch (type) {
-      case 'technical':
-        return 'bg-blue-100 text-blue-800';
-      case 'behavioral':
-        return 'bg-green-100 text-green-800';
-      case 'situational':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'technical': return 'bg-blue-100 text-blue-800';
+      case 'behavioral': return 'bg-green-100 text-green-800';
+      case 'situational': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getDifficultyColor = (difficulty: Question['difficulty']) => {
     switch (difficulty) {
-      case 'easy':
-        return 'bg-green-100 text-green-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'hard':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -132,8 +139,13 @@ export const InterviewScreen: React.FC = () => {
   }
 
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const currentTime = timeLeft[currentQuestion.id] || 0;
-  const isTimeRunningOut = currentTime <= 60; // Less than 1 minute
+  const isTimeRunningOut = timeLeft <= 60;
+
+  // pagination calculations
+  const totalPages = Math.ceil(questions.length / pageSize);
+  const startIndex = page * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, questions.length);
+  const visibleQuestions = questions.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,12 +161,12 @@ export const InterviewScreen: React.FC = () => {
                 Question {currentQuestionIndex + 1} of {questions.length}
               </p>
             </div>
-            
+
             <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
               isTimeRunningOut ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
             }`}>
               <Clock className="w-4 h-4" />
-              <span className="font-medium">{formatTime(currentTime)}</span>
+              <span className="font-medium">{formatTime(timeLeft)}</span>
             </div>
           </div>
         </div>
@@ -185,9 +197,6 @@ export const InterviewScreen: React.FC = () => {
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
               {currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1)}
             </span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              {currentQuestion.timeLimit} min
-            </span>
           </div>
 
           {/* Question */}
@@ -207,70 +216,96 @@ export const InterviewScreen: React.FC = () => {
             </label>
             <textarea
               rows={8}
-              value={answers[currentQuestion.id] || ''}
+              value={currentQuestion.answer || ''}
               onChange={(e) => handleAnswerChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Type your answer here..."
-              disabled={currentTime === 0}
             />
-            {currentTime === 0 && (
-              <p className="mt-2 text-sm text-red-600">Time's up for this question!</p>
-            )}
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                currentQuestionIndex === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-50 border border-gray-300'
-              }`}
-            >
-              Previous
-            </button>
+          <div className="flex flex-col items-center space-y-4">
+            {/* Prev/Next buttons */}
+            <div className="flex items-center justify-between w-full">
+              <button
+                onClick={handlePrevious}
+                disabled={currentQuestionIndex === 0}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  currentQuestionIndex === 0
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-700 hover:bg-gray-50 border border-gray-300'
+                }`}
+              >
+                Previous
+              </button>
 
-            <div className="flex items-center space-x-2">
-              {questions.map((_, index) => (
+              {isLastQuestion ? (
                 <button
-                  key={index}
-                  onClick={() => setCurrentQuestionIndex(index)}
-                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                    index === currentQuestionIndex
-                      ? 'bg-blue-600 text-white'
-                      : answers[questions[index].id]
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50"
                 >
-                  {answers[questions[index].id] ? (
-                    <CheckCircle className="w-4 h-4 mx-auto" />
-                  ) : (
-                    index + 1
-                  )}
+                  <Send className="w-4 h-4" />
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit Interview'}</span>
                 </button>
-              ))}
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
+                >
+                  Next
+                </button>
+              )}
             </div>
 
-            {isLastQuestion ? (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'Submitting...' : 'Submit Interview'}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
-              >
-                Next
-              </button>
-            )}
+            {/* Question Pagination */}
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex items-center space-x-2">
+                {visibleQuestions.map((_, index) => {
+                  const questionIndex = startIndex + index;
+                  return (
+                    <button
+                      key={questionIndex}
+                      onClick={() => setCurrentQuestionIndex(questionIndex)}
+                      className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+                        questionIndex === currentQuestionIndex
+                          ? 'bg-blue-600 text-white'
+                          : interviewQuestions[questionIndex]?.answer
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {interviewQuestions[questionIndex]?.answer ? (
+                        <CheckCircle className="w-4 h-4 mx-auto" />
+                      ) : (
+                        questionIndex + 1
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 0))}
+                  disabled={page === 0}
+                  className="px-2 py-1 rounded bg-gray-200 disabled:opacity-50"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm">
+                  Page {page + 1} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
+                  disabled={page === totalPages - 1}
+                  className="px-2 py-1 rounded bg-gray-200 disabled:opacity-50"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

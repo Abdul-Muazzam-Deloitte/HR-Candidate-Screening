@@ -12,6 +12,7 @@ from ag_ui.core import (
 )
 
 from langgraph.config import get_stream_writer
+from langgraph.types import interrupt
 
 MAX_RETRIES = 2
 
@@ -67,6 +68,15 @@ def interview_questions_node(state: CVProcessingState):
 
             # Process the generated interview questions
             state["messages"].append({"type": "success", "content": f"Interview questions generated successfully"})
+
+            # answers = interrupt({
+            #     "type": "candidate_answers",
+            #     "questions": interview_questions_object
+            # })
+
+            # # On resume, answers will be returned here
+            # print(answers)
+    
             writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Questions Generation Process", run_id="question_generation", result=interview_questions_object))
             return {"interview_questions" : interview_questions_object}
     except Exception as e:

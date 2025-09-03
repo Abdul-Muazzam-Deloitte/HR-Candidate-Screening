@@ -3,6 +3,7 @@ from langchain.prompts import PromptTemplate
 from app.llm_handler.llm_handler import ChatCompletionHandler
 from app.models.interview_questions import InterviewQAs
 from typing import List
+from app.models.job_description import JobDescription
 
 from ag_ui.core import (
     RunStartedEvent,
@@ -20,7 +21,7 @@ from langgraph.config import get_stream_writer
 
 
 @tool
-def generate_interview_questions(candidate_cv_content: str, job_description: str) -> InterviewQAs:
+def generate_interview_questions(candidate_cv_content: str, job_description: JobDescription) -> InterviewQAs:
     """
     Generates tailored interview questions based on the candidate's CV data.
     
@@ -46,18 +47,16 @@ def generate_interview_questions(candidate_cv_content: str, job_description: str
         candidate_cv_content=candidate_cv_content
     )
 
-    print(formatted_user_message)
-
     handler = ChatCompletionHandler()
     result =  handler.run_chain(system_message,formatted_user_message,output_model=InterviewQAs,node_id="question_generation")
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - question_generation - Generating interview questions completed successfully"))  
 
-    return InterviewQAs(**result)
+    return result
 
 
 @tool
-def regenerate_interview_questions(interview_questions: InterviewQAs, hallucinated_questions: List[str], candidate_cv_content: str, job_description: str) -> InterviewQAs:
+def regenerate_interview_questions(interview_questions: InterviewQAs, hallucinated_questions: List[str], candidate_cv_content: str, job_description: JobDescription) -> InterviewQAs:
     """
     Generates tailored interview questions based on the candidate's CV data.
     
@@ -90,4 +89,4 @@ def regenerate_interview_questions(interview_questions: InterviewQAs, hallucinat
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="4 - question_generation - Regenerating hallucinated interview questions completed successfully"))  
     
-    return InterviewQAs(**result)
+    return result

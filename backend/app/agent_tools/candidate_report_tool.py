@@ -45,7 +45,6 @@ def generate_candidate_report(candidate_cv_data: str, candidate_final_score: Can
 
     handler = ChatCompletionHandler()
     result =  handler.run_chain(system_message,formatted_user_message,output_model=CandidateReport,node_id="report_generation")
-    print (result)
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - report_generation - Generating candidate's report completed successfully"))  
     return result

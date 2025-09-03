@@ -42,17 +42,15 @@ export const NewScreeningPage: React.FC = () => {
     if (!selectedJob) return;
     
     setIsProcessing(true);
-    
+
     try {
       // Create session first with basic candidate info
-      const sessionId = await createSession(candidate, selectedJob, uploadedFile);
-      console.log(sessionId)
-
-      navigate(`/candidate-details/${sessionId}`);
+      const session = await createSession(candidate, selectedJob, uploadedFile);
+      navigate(`/candidate-details/${session.id}`);
 
       
       // 2️⃣ Call API service to start the workflow
-      await extractCVContents(sessionId, uploadedFile);
+      await extractCVContents(session.id, selectedJob, uploadedFile);
     } catch (error) {
       console.error('Error creating session:', error);
     } finally {

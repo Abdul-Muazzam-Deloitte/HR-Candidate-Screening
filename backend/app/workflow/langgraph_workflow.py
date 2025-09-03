@@ -4,6 +4,7 @@ from app.models.candidate_info import Candidate
 from app.models.interview_questions import InterviewQAs
 from app.models.score_result import CVScore, ScoreDetail
 from app.models.candidate_assessment import CandidateFinalScore
+from app.models.job_description import JobDescription
 
 from app.nodes.document_extraction_node import landingai_extraction_node
 from app.nodes.cv_scoring_node import cv_scoring_node
@@ -13,6 +14,7 @@ from app.nodes.candidate_assessment_score_node import candidate_assessment_score
 from app.nodes.interview_questions_node import interview_questions_node
 from app.nodes.candidate_report_node import send_report_node as candidate_report_node
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import InMemorySaver
 
 from ag_ui.encoder import EventEncoder
 from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
@@ -29,6 +31,8 @@ from ag_ui.core import (
 
 import json
 from ag_ui.core.events import BaseEvent
+import uuid
+from langchain_core.runnables import RunnableConfig
 
 from pydantic import BaseModel
 
@@ -72,7 +76,7 @@ def create_cv_scoring_workflow():
             return "error_handler"
         
         final_score = state.get("candidate_final_score")
-        if final_score and final_score.proceed_to_interview == "Yes":
+        if final_score and final_score["proceed_to_interview"] == "Yes":
             return "interview_questions"
         else:
              return END
@@ -108,15 +112,24 @@ def create_cv_scoring_workflow():
         lambda state: "error_handler" if state.get("error") else END
     )
 
+    # workflow.add_conditional_edges(
+    #     "send_candidate_report",
+    #     lambda state: "error_handler" if state.get("error") else END
+    # )
+
     workflow.add_edge("error_handler", END)
-    
+
+    checkpointer = InMemorySaver()
+
+
+
     return workflow.compile()
 
-async def hr_screening_workflow(pdf_path: str):
+async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
 
     print("Starting HR screening workflow...")
     # pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
-    job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
+    # job_description = open("app/knowledge_base/scoring_process/job_description.txt").read()
 
     workflow_graph = create_cv_scoring_workflow()
 
@@ -175,10 +188,13 @@ async def hr_screening_workflow(pdf_path: str):
 
     try:
 
+        config = RunnableConfig(configurable={"thread_id": uuid.uuid4()})
         # Stream workflow node updates
         for chunk in workflow_graph.stream(
             initial_state,
+            # config = config,
             stream_mode= "custom"
+            
         ):
 
             if isinstance(chunk, dict):

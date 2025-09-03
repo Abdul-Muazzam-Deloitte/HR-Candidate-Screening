@@ -29,7 +29,7 @@ export interface StreamingCallback {
 }
 
 export const apiService = {
-  extractCVContents: async (file: File, handleWorkflowEvent: (event: any) => void ): Promise<void> => {
+  extractCVContents: async (file: File, job_description: any, handleWorkflowEvent: (event: any) => void ): Promise<void> => {
     try {
       // Convert file to base64 for payload
       const fileContent = await new Promise<string>((resolve, reject) => {
@@ -55,7 +55,8 @@ export const apiService = {
           run_id: "cv-screening-" + Date.now(),
           payload: {
             fileName: file.name,
-            fileContent: fileContent
+            fileContent: fileContent,
+            job_description: job_description
           }
         };
         

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, Briefcase } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
@@ -7,13 +7,14 @@ import { ProcessTracker } from '../dashboard/ProcessTracker';
 export const SessionDetailsPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { currentSession, processNodes = [], resetCurrentSession } = useScreening();
+  const { sessions, processNodes = [] } = useScreening();
 
   const dashboardClick = () => {
-    resetCurrentSession();
     navigate('/dashboard');
 
   };
+
+  const currentSession = sessions.find(s => s.id === sessionId);
 
   if (!currentSession) {
     return (
@@ -97,7 +98,7 @@ export const SessionDetailsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {currentSession.result.score > 0 && (
+                {/* {currentSession.result.score > 0 && (
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm font-medium text-gray-900 mb-2">Match Score</p>
                     <div className="flex items-center space-x-2">
@@ -115,7 +116,7 @@ export const SessionDetailsPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
               
               {/* Additional Candidate Information */}

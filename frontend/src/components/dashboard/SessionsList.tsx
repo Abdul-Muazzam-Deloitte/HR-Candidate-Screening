@@ -1,60 +1,76 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Clock, CheckCircle, AlertTriangle, User, Calendar } from 'lucide-react';
+import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users  } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const SessionsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { sessions, setCurrentSession } = useScreening();
+  const { sessions } = useScreening();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'questions_generated':
-        return 'bg-blue-100 text-blue-800';
-      case 'cv_processing':
+      case 'pending':
+        return 'bg-gray-100 text-gray-800';
+      case 'document_extraction':
         return 'bg-yellow-100 text-yellow-800';
+      case 'cv_scoring':
+        return 'bg-orange-100 text-orange-800';
+      case 'social_media_screening':
+        return 'bg-pink-100 text-pink-800';
+      case 'candidate_assessment':
+        return 'bg-teal-100 text-teal-800';
+      case 'report_generation':
+        return 'bg-cyan-100 text-cyan-800';
+      case 'question_generation':
+        return 'bg-blue-100 text-blue-800';
       case 'interview_in_progress':
         return 'bg-purple-100 text-purple-800';
-      case 'evaluated':
+      case 'interview_completed':
         return 'bg-indigo-100 text-indigo-800';
-      case 'pending':
-        return 'bg-gray-100 text-gray-800';
+      case 'evaluated':
+        return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'questions_generated':
-        return <AlertTriangle className="w-4 h-4" />;
-      case 'cv_processing':
-        return <Clock className="w-4 h-4" />;
-      case 'interview_in_progress':
-        return <Clock className="w-4 h-4" />;
-      case 'evaluated':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'pending':
-        return <Clock className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return <Clock className="w-4 h-4" />;
+    case 'document_extraction':
+      return <FileText className="w-4 h-4" />;
+    case 'cv_scoring':
+      return <CheckCircle className="w-4 h-4" />;
+    case 'social_media_screening':
+      return <Users className="w-4 h-4" />;
+    case 'candidate_assessment':
+      return <UserCheck className="w-4 h-4" />;
+    case 'report_generation':
+      return <FileText className="w-4 h-4" />;
+    case 'question_generation':
+      return <AlertTriangle className="w-4 h-4" />;
+    case 'interview_in_progress':
+      return <Clock className="w-4 h-4" />;
+    case 'interview_completed':
+      return <CheckCircle className="w-4 h-4" />;
+    case 'evaluated':
+      return <CheckCircle className="w-4 h-4" />;
+    default:
+      return <Clock className="w-4 h-4" />;
+  }
+};
 
   const handleViewSession = (sessionId: string) => {
-    setCurrentSession(sessionId);
+
     const session = sessions.find(s => s.id === sessionId);
     
-    if (session?.status === 'questions_generated' && user?.role === 'candidate') {
-      navigate(`/interview/${sessionId}`);
+    if (session?.status === 'question_generation' && user?.role === 'candidate') {
+      navigate(`/interview/${session?.id}`);
     } else {
-      navigate(`/candidate-details/${sessionId}`);
+      navigate(`/candidate-details/${session?.id}`);
     }
   };
 
@@ -148,7 +164,7 @@ export const SessionsList: React.FC = () => {
 
               {/* Match Score */}
               <td className="px-6 py-4 whitespace-nowrap">
-                {session.result.score > 0 ? (
+                {/* {session.result.score > 0 ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-16 bg-gray-200 rounded-full h-2">
                       <div
@@ -165,7 +181,7 @@ export const SessionsList: React.FC = () => {
                   </div>
                 ) : (
                   <span className="text-sm text-gray-500">-</span>
-                )}
+                )} */}
               </td>
 
               {/* Date */}
@@ -176,7 +192,7 @@ export const SessionsList: React.FC = () => {
               {/* Actions */}
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center space-x-2">
-                  {session.status === 'questions_generated' && user?.role === 'candidate' && (
+                  {session.status === 'question_generation' && user?.role === 'candidate' && (
                     <button
                       onClick={() => handleViewSession(session.id)}
                       className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"

@@ -55,13 +55,12 @@ class ChatCompletionHandler:
     def __init__(self):
         """Initialize the ChatCompletionHandler with the LLM and prompt template."""
 
-        # self.llm = ChatOpenAI(
-        #     model=model,
-        #     api_key=google_api_key,
-        #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        #     temperature=0.5,
-        #     streaming=True
-        # )
+        self.llm = ChatOpenAI(
+            model=model,
+            api_key=google_api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            temperature=0.5
+        )
 
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", "{system_message}"),
@@ -90,51 +89,51 @@ class ChatCompletionHandler:
             message_id=node_id,
             role="assistant"
         ))
-        # self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
+        self.chain = self.prompt_template | self.llm.with_structured_output(output_model)
 
-        # response = self.chain.invoke({
-        #     "system_message": system_message,
-        #     "user_message": user_message
-        # })
-
-        # return response.model_dump()
-
-        """Run LLM with AG-UI streaming events."""
-        callback_manager = CallbackManager([AGUIStreamingCallback(writer, node_id)])
-
-        llm = ChatOpenAI(
-            model=model,
-            api_key=google_api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            temperature=0.5,
-            streaming=True,
-            callback_manager = callback_manager
-        )
-
-        self.chain = self.prompt_template | llm
-
-        raw_response = self.chain.invoke({
+        response = self.chain.invoke({
             "system_message": system_message,
             "user_message": user_message
         })
 
-        def strip_code_block(text: str) -> str:
-            """Remove Markdown code fences (```json ... ```) if present."""
-            match = re.search(r"```(?:json)?\n(.*?)```", text, re.DOTALL)
-            return match.group(1).strip() if match else text.strip()
+        return response.model_dump()
 
-        # Parse final string into Pydantic model
-        final_text = str(raw_response.content)
-        print(output_model.model_json_schema())
-        clean_json = strip_code_block(final_text)
-        parsed_model = output_model.model_validate_json(clean_json, strict=False)
+        # """Run LLM with AG-UI streaming events."""
+        # callback_manager = CallbackManager([AGUIStreamingCallback(writer, node_id)])
 
-        writer(TextMessageEndEvent(
-            type=EventType.TEXT_MESSAGE_END,
-            message_id=node_id
-        ))
+        # llm = ChatOpenAI(
+        #     model=model,
+        #     api_key=google_api_key,
+        #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        #     temperature=0.5,
+        #     streaming=True,
+        #     callback_manager = callback_manager
+        # )
 
-        return parsed_model.model_dump()
+        # self.chain = self.prompt_template | llm
+
+        # raw_response = self.chain.invoke({
+        #     "system_message": system_message,
+        #     "user_message": user_message
+        # })
+
+        # def strip_code_block(text: str) -> str:
+        #     """Remove Markdown code fences (```json ... ```) if present."""
+        #     match = re.search(r"```(?:json)?\n(.*?)```", text, re.DOTALL)
+        #     return match.group(1).strip() if match else text.strip()
+
+        # # Parse final string into Pydantic model
+        # final_text = str(raw_response.content)
+        # print(output_model.model_json_schema())
+        # clean_json = strip_code_block(final_text)
+        # parsed_model = output_model.model_validate_json(clean_json, strict=False)
+
+        # writer(TextMessageEndEvent(
+        #     type=EventType.TEXT_MESSAGE_END,
+        #     message_id=node_id
+        # ))
+
+        # return parsed_model.model_dump()
 
     @staticmethod
     def get_response_gemini(system_message: str, user_message: str) -> str:

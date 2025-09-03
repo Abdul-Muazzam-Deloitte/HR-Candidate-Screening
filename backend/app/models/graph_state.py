@@ -5,6 +5,7 @@ from app.models.score_result import CVScore
 from app.models.social_media_score import SocialMediaScore
 from app.models.candidate_assessment import CandidateFinalScore
 from app.models.interview_questions import InterviewQAs
+from app.models.job_description import JobDescription
 from typing import List, Optional, Any
 from typing import Annotated
 import operator
@@ -12,7 +13,7 @@ import operator
 # State definition for the graph
 class CVProcessingState(TypedDict):
     pdf_path: str
-    job_description: str
+    job_description: JobDescription
     cv_data: Candidate
     cv_score: CVScore
     social_media_score: Optional[SocialMediaScore]

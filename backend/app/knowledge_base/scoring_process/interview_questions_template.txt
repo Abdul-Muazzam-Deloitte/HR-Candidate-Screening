@@ -16,16 +16,7 @@ Your task is to generate a comprehensive and targeted set of interview questions
 - **Interview Duration** — Suggest a total time estimate for this interview.
 
 IMPORTANT: You must respond with valid JSON that matches this exact structure:
-
-```json
-{'technical_questions': {'description': 'Technical skill assessment questions', 'items': {'type': 'string'}, 'title': 'Technical Questions', 'type': 'array'}, 
-'behavioral_questions': {'description': 'Behavioral and soft skills questions', 'items': {'type': 'string'}, 'title': 'Behavioral Questions', 'type': 'array'}, 
-'experience_questions': {'description': 'Experience and background questions', 'items': {'type': 'string'}, 'title': 'Experience Questions', 'type': 'array'}, 
-'situational_questions': {'description': 'Situational judgment questions', 'items': {'type': 'string'}, 'title': 'Situational Questions', 'type': 'array'}, 
-'cultural_fit_questions': {'description': 'Company culture and fit questions', 'items': {'type': 'string'}, 'title': 'Cultural Fit Questions', 'type': 'array'}, 
-'areas_to_probe': {'description': 'Specific areas to investigate based on CV/screening analysis', 'items': {'type': 'string'}, 'title': 'Areas To Probe', 'type': 'array'}, 
-'red_flag_questions': {'description': 'Questions to address any concerns from screening', 'items': {'type': 'string'}, 'title': 'Red Flag Questions', 'type': 'array'}, 
-'interview_duration': {'description': 'Recommended interview duration', 'title': 'Interview Duration', 'type': 'string'}}
+{output_model_structure}
 
 Return only the JSON response without any markdown formatting or additional text.
 

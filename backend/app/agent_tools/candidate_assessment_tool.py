@@ -52,4 +52,4 @@ def candiate_assessment_process(candidate_cv_score: CVScore
     result =  handler.run_chain(system_message,formatted_user_message,output_model=CandidateFinalScore, node_id="candidate_assessment")
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - candidate_assessment - Generating CV score completed successfully"))  
-    return CandidateFinalScore(**result)
+    return result

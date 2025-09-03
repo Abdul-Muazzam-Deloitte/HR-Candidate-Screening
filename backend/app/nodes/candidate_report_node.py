@@ -33,8 +33,6 @@ def send_report_node(state: CVProcessingState):
             "candidate_cv_data": state["cv_data"].markdown,
             "candidate_final_score": state["candidate_final_score"]
         })
-
-        print(candidate_report)
         
         state["messages"].append({"type": "success", "content": "Report generated - candidate assessment complete"})
         writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Report Generation Process", run_id="report_generation", result=candidate_report))

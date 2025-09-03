@@ -34,28 +34,45 @@ export interface JobDescription {
 }
 
 export interface ScreeningResult {
-  isMatch: boolean;
-  score: number;
-  matchedSkills: string[];
-  missingSkills: string[];
-  summary: string;
+  groupedQuestions?: InterviewQuestions;
   questions?: Question[];
+  // answers?: Answer[];
+  interview_duration?: string;
 }
+
+export interface InterviewQuestions {
+  technical_questions: string[];
+  behavioral_questions: string[];
+  situational_questions: string[];
+  cultural_fit_questions: string[];
+  experience_questions: string[];
+  red_flag_questions: string[];
+  areas_to_probe: string[];
+  interview_duration: string;
+}
+
 
 export interface Question {
   id: string;
   question: string;
-  type: 'technical' | 'behavioral' | 'situational';
-  difficulty: 'easy' | 'medium' | 'hard';
-  timeLimit: number; // in minutes
-  expectedAnswer?: string;
+  type:
+    | "technical"
+    | "behavioral"
+    | "situational"
+    | "cultural_fit"
+    | "experience"
+    | "red_flag"
+    | "probe";
+  difficulty: "easy" | "medium" | "hard";
+  answer?: string;
+  submittedAt?: Date;
 }
 
 export interface Answer {
   questionId: string;
   answer: string;
   timeSpent: number; // in seconds
-  submittedAt: Date;
+  submittedAt?: Date;
 }
 
 export interface ScreeningSession {
@@ -63,8 +80,8 @@ export interface ScreeningSession {
   candidate: Candidate;
   jobDescription: JobDescription;
   cvFile?: File;
-  result: ScreeningResult;
-  status: 'pending' | 'cv_processing' | 'questions_generated' | 'interview_in_progress' | 'completed' | 'evaluated';
+  questions?: ScreeningResult;
+  status: 'pending' | 'document_extraction'| 'cv_scoring' | 'social_media_screening' | 'candidate_assessment'| 'report_generation' | 'question_generation' | 'interview_in_progress' | 'interview_completed' | 'evaluated';
   createdAt: Date;
   updatedAt: Date;
   answers?: Answer[];

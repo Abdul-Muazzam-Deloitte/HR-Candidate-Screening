@@ -17,7 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   // Check if candidate has any sessions with questions ready
   const hasInterviewQuestions = user?.role === 'candidate' && 
-    sessions.some(session => session.status === 'questions_generated');
+    sessions.some(session => session.status === 'question_generation');
   const navigationItems = [
     {
       name: 'Dashboard',
@@ -54,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const handleInterviewClick = () => {
     // Find the first session with questions ready
     const sessionWithQuestions = sessions.find(session => 
-      session.status === 'questions_generated'
+      session.status === 'question_generation'
     );
     
     if (sessionWithQuestions) {

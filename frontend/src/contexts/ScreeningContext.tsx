@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { ScreeningSession, ProcessStep, Report, ProcessNode } from '../types';
+import { ScreeningSession, ProcessStep, Report, ProcessNode, InterviewQuestions, Question } from '../types';
 import { apiService } from '../services/apiService';
 
 // interface ScreeningContextType {
@@ -16,15 +16,17 @@ import { apiService } from '../services/apiService';
 // }
 
 interface ScreeningContextType {
-  sessions: any[];
-  currentSession: any;
+  sessions: ScreeningSession[];
+  // currentSession?: ScreeningSession;
   processNodes: ProcessNode[];
   reports: any[];
-  createSession: (candidate: any, job: any, file: File) => Promise<string>;
-  extractCVContents: (sessionId: string, cvFile: File) => Promise<void>;
-  setCurrentSession: (session: any) => void;
-  handleWorkflowEvent: (event: any) => void;
-  resetCurrentSession: () => void;
+  createSession: (candidate: any, job: any, file: File) => Promise<ScreeningSession>;
+  updateSession: (sessionId: string, updatedFields: Partial<ScreeningSession>) => void;
+  updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
+  extractCVContents: (sessionId: string, job_description: any,  cvFile: File) => Promise<void>;
+  // setCurrentSession: (session: any) => void;
+  handleWorkflowEvent: (sessionId: string, event: any) => void;
+  // resetCurrentSession: () => void;
 }
 
 const ScreeningContext = createContext<ScreeningContextType | undefined>(undefined);
@@ -45,10 +47,20 @@ interface ScreeningProviderProps {
 export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }) => {
   const [sessions, setSessions] = useState<ScreeningSession[]>([]);
   const [processNodes, setProcessNodes] = useState<ProcessNode[]>([]);
-  const [currentSession, setCurrentSessionState] = useState<ScreeningSession>();
+  // const [currentSession, setCurrentSessionState] = useState<ScreeningSession>();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+   const updateSession = (sessionId: string, updatedFields: Partial<ScreeningSession>) => {
+    setSessions(prev =>
+      prev.map(s => (s.id === sessionId ? { ...s, ...updatedFields, updatedAt: new Date() } : s))
+    );
+    // if (currentSession?.id === sessionId) {
+    //   setCurrentSessionState(prev => (prev ? { ...prev, ...updatedFields, updatedAt: new Date() } : undefined));
+    // }
+  };
+  
 
   function createNodeFromRunStarted(event: any): ProcessNode {
     return {
@@ -123,10 +135,10 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 }
 
     // Extract CV contents using API
-  const extractCVContents = async (sessionId: string, cvFile: File) => {
+  const extractCVContents = async (sessionId: string, job_description: any, cvFile: File) => {
     setIsProcessing(true);
     try {
-      await apiService.extractCVContents(cvFile, handleWorkflowEvent);
+      await apiService.extractCVContents(cvFile, job_description, (event: any) => handleWorkflowEvent(sessionId, event));
     } finally {
       setIsProcessing(false);
     }
@@ -134,18 +146,24 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 
 
   // --- Helper: reset workflow steps (new candidate etc.)
-  const handleWorkflowEvent = (event: any) => {
+  const handleWorkflowEvent = (sessionId: string, event: any) => {
 
     setProcessNodes(prevNodes => {
       switch (event.type) {
         case "RUN_STARTED": {
           const newNode = createNodeFromRunStarted(event);
+
+          updateSessionStatus(sessionId,event.runId);
           return [...prevNodes, newNode];
         }
 
         case "RUN_FINISHED": {
           if (event.runId === 'document_extraction' && event.result) {
-            updateCandidateFromExtraction(event.result);
+            updateCandidateFromExtraction(sessionId, event.result);
+          }
+
+          if (event.runId === 'question_generation' && event.result) {
+            mapInterviewResponseToQuestions(sessionId, event.result);
           }
           
           return prevNodes.map(node =>
@@ -208,13 +226,10 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 
   const resetNodes = () => setProcessNodes([]);
 
-  const updateCandidateFromExtraction = (extractedData: any) => {
+  const updateCandidateFromExtraction = (sessionId: string , extractedData: any) => {  
 
-    if (!currentSession) return;
-   
     // Update the current session's candidate with extracted data
     const updatedCandidate = {
-      ...currentSession.candidate,
       name: extractedData.name,
       email: extractedData.email,
       phone: extractedData.phone,
@@ -226,24 +241,36 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       education: extractedData.education,
     };
 
-    console.log('Updated candidate:', updatedCandidate);
+    // console.log('Updated candidate:', updatedCandidate);
+
+    // updateSession(sessionId, {
+    //   candidate: extractedData.candidate,
+    //   status: 'document_extraction',
+    // });
     
     // Update sessions array
     setSessions(prev => prev.map(session => 
-      session.id === currentSession.id 
-        ? { ...session, candidate: updatedCandidate, updatedAt: new Date() }
+      session.id === sessionId 
+        ? { 
+            ...session, 
+            candidate: { 
+              ...session.candidate, 
+              ...updatedCandidate 
+            }, 
+            updatedAt: new Date() 
+          }
         : session
     ));
     
-    // Update current session
-    setCurrentSessionState(prev => prev ? { 
-      ...prev, 
-      candidate: updatedCandidate, 
-      updatedAt: new Date() 
-    } : undefined);
+    // // Update current session
+    // setCurrentSessionState(prev => prev ? { 
+    //   ...prev, 
+    //   candidate: updatedCandidate, 
+    //   updatedAt: new Date() 
+    // } : undefined);
   };
 
-  const createSession = async (candidateData: any, jobDescription: any, cvFile?: File): Promise<string> => {
+  const createSession = async (candidateData: any, jobDescription: any, cvFile?: File): Promise<ScreeningSession> => {
     setIsLoading(true);
     
     const newSession: ScreeningSession = {
@@ -251,78 +278,71 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       candidate: { ...candidateData, cvFile },
       jobDescription,
       cvFile,
-      result: {
-        isMatch: false,
-        score: 0,
-        matchedSkills: [],
-        missingSkills: [],
-        summary: '',
-      },
-      status: 'cv_processing',
+      status: 'document_extraction',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     setSessions(prev => [...prev, newSession]);
-    setCurrentSessionState(newSession);
+    // setCurrentSessionState(newSession);
     setProcessNodes([]);
     setIsLoading(false);
 
-    return newSession.id;
+    return newSession;
   };
 
-  const generateQuestionsFromData = (questionsData: any) => {
-    if (!questionsData || !questionsData.interview_questions) {
-      return [];
-    }
+const mapInterviewResponseToQuestions = (sessionId: string, backendResponse: any) => {
+  if (!backendResponse) return [];
 
-    const questions = [];
-    const { technical_questions, behavioral_questions, experience_questions } = questionsData.interview_questions;
+  const {
+    technical_questions = [],
+    behavioral_questions = [],
+    experience_questions = [],
+    situational_questions = [],
+    cultural_fit_questions = [],
+    red_flag_questions = [],
+    areas_to_probe = [],
+    interview_duration = "" 
+  } = backendResponse;
 
-    // Add technical questions
-    if (technical_questions) {
-      technical_questions.slice(0, 3).forEach((q: string, index: number) => {
-        questions.push({
-          id: `tech-${index + 1}`,
-          question: q,
-          type: 'technical' as const,
-          difficulty: 'medium' as const,
-          timeLimit: 10,
-          expectedAnswer: 'Look for specific technical knowledge and problem-solving approach.'
-        });
+  const questions: Question[] = [];
+
+  const addQuestions = (arr: string[], type: Question['type'], prefix: string) => {
+    arr.forEach((q, idx) => {
+      questions.push({
+        id: `${prefix}-${idx + 1}`,
+        question: q,
+        type,
+        difficulty: 'medium'
       });
-    }
-
-    // Add behavioral questions
-    if (behavioral_questions) {
-      behavioral_questions.slice(0, 2).forEach((q: string, index: number) => {
-        questions.push({
-          id: `behavioral-${index + 1}`,
-          question: q,
-          type: 'behavioral' as const,
-          difficulty: 'medium' as const,
-          timeLimit: 8,
-          expectedAnswer: 'Assess soft skills, leadership, and team collaboration.'
-        });
-      });
-    }
-
-    // Add experience questions
-    if (experience_questions) {
-      experience_questions.slice(0, 2).forEach((q: string, index: number) => {
-        questions.push({
-          id: `experience-${index + 1}`,
-          question: q,
-          type: 'situational' as const,
-          difficulty: 'medium' as const,
-          timeLimit: 12,
-          expectedAnswer: 'Evaluate relevant experience and practical application.'
-        });
-      });
-    }
-
-    return questions;
+    });
   };
+
+  addQuestions(technical_questions, 'technical', 'tech');
+  addQuestions(behavioral_questions, 'behavioral', 'behavioral');
+  addQuestions(experience_questions, 'experience', 'experience');
+  addQuestions(situational_questions, 'situational', 'situational');
+  addQuestions(cultural_fit_questions, 'cultural_fit', 'cultural');
+  addQuestions(red_flag_questions, 'red_flag', 'redflag');
+  addQuestions(areas_to_probe, 'probe', 'probe');
+
+  // if (!currentSession) return questions;
+
+  setSessions(prev => prev.map(session =>
+    session.id === sessionId
+      ? {
+          ...session,
+          questions: {
+            ...session.questions,
+            questions: questions,
+            interview_duration: interview_duration,
+          },
+          updatedAt: new Date(),
+        }
+      : session
+  ));
+
+};
 
   const updateSessionStatus = (sessionId: string, status: ScreeningSession['status']) => {
     setSessions(prev => prev.map(session => 
@@ -331,9 +351,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
         : session
     ));
     
-    if (currentSession?.id === sessionId) {
-      setCurrentSessionState(prev => prev ? { ...prev, status, updatedAt: new Date() } : undefined);
-    }
   };
 
   const generateReport = async (sessionId: string, type: Report['type']) => {
@@ -349,16 +366,16 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     setReports(prev => [...prev, newReport]);
   };
 
-  const setCurrentSession = (sessionId: string) => {
-    if (sessionId) {
-      const session = sessions.find(s => s.id === sessionId);
-      setCurrentSessionState(session);
-    }
-  };
+  // const setCurrentSession = (sessionId: string) => {
+  //   if (sessionId) {
+  //     const session = sessions.find(s => s.id === sessionId);
+  //     setCurrentSessionState(session);
+  //   }
+  // };
 
-  const resetCurrentSession = () => {
-      setCurrentSessionState(undefined);
-  };
+  // const resetCurrentSession = () => {
+  //     setCurrentSessionState(undefined);
+  // };
 
   const value: ScreeningContextType = {
     sessions,
@@ -366,10 +383,12 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     processNodes,
     handleWorkflowEvent,
     extractCVContents,
-    currentSession,
+    updateSessionStatus,
+    // currentSession,
+    updateSession,
     reports,
-    setCurrentSession,
-    resetCurrentSession
+    // setCurrentSession,
+    // resetCurrentSession
   };
 
   return (

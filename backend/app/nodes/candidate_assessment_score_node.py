@@ -34,8 +34,6 @@ def candidate_assessment_score_node(state: CVProcessingState):
             "candidate_social_score": None
         })
 
-        print(final_score_object)
-
         # return state
         state["messages"].append({"type": "success", "content": f"Final Assessment score successful"})
         writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Candidate's Final Assessment Process", run_id="candidate_assessment", result=final_score_object))

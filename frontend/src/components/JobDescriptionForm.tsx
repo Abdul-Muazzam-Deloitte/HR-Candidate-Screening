@@ -141,12 +141,13 @@ export const JobDescriptionForm: React.FC<JobDescriptionFormProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Requirements
+            Requirements *
           </label>
           {formData.requirements.map((requirement, index) => (
             <div key={index} className="flex items-center space-x-2 mb-2">
               <input
                 type="text"
+                required
                 value={requirement}
                 onChange={(e) => updateField('requirements', index, e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

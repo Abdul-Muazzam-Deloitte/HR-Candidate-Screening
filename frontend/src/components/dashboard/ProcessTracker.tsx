@@ -29,8 +29,6 @@ export const ProcessTracker: React.FC<ProcessTrackerProps> = ({
     }
   }, [nodes]);
 
-  const { currentSession } = useScreening();
-
   const getNodeIcon = (status: ProcessNode["status"]) => {
     switch (status) {
       case "completed":
@@ -156,10 +154,11 @@ export const ProcessTracker: React.FC<ProcessTrackerProps> = ({
                   </ExpandableSection>
                 )}
 
-                {/* Streaming tokens */}
+                {/* Streaming tokens 
                 {node.streamingTokens && !node.result && (
                   <StreamingOutput content={node.streamingTokens} title="Streaming..."/>
                 )}
+                */}
 
                 {/* Other nodes - generic result display */}
                 {node.result && node.id !== "document_extraction" && (
@@ -334,7 +333,7 @@ export const NodeResultCard: React.FC<NodeResultCardProps> = ({ result, title = 
 
       if (Array.isArray(value)) {
         return (
-          <ExpandableSection key={`${keyPrefix}-${idx}`} title={displayKey} defaultOpen={false}>
+          <ExpandableSection key={`${keyPrefix}-${idx}`} title={displayKey} defaultOpen={true}>
             <div className="space-y-2">
               {value.length
                 ? value.map((item: any, i: number) =>
@@ -352,7 +351,7 @@ export const NodeResultCard: React.FC<NodeResultCardProps> = ({ result, title = 
         );
       } else if (typeof value === "object" && value !== null) {
         return (
-          <ExpandableSection key={`${keyPrefix}-${idx}`} title={displayKey} defaultOpen={false}>
+          <ExpandableSection key={`${keyPrefix}-${idx}`} title={displayKey} defaultOpen={true}>
             <div className="border rounded-md p-2 mb-2 bg-gray-50">
               {renderObjectCard(value, `${keyPrefix}-${key}`)}
             </div>

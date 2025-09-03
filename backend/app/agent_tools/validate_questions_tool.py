@@ -18,10 +18,12 @@ from ag_ui.core import (
 
 
 from langgraph.config import get_stream_writer
+from app.models.job_description import JobDescription
+import json
 
 
 @tool
-def validate_questions_semantically(interview_questions: InterviewQAs, candidate_cv_content: str, job_description: str, threshold: float = 0.5) -> List[dict]:
+def validate_questions_semantically(interview_questions: InterviewQAs, candidate_cv_content: str, job_description: JobDescription, threshold: float = 0.5) -> List[dict]:
     """
     Validates the generated interview questions against the candidate's CV and job description.
 
@@ -56,7 +58,7 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="2 - question_generation - Embedding cv and job description"))  
     # Split CV and JD into chunks
     cv_chunks = chunk_documents(candidate_cv_content)
-    jd_chunks = chunk_documents(job_description)
+    jd_chunks = chunk_documents(json.dumps(job_description.model_dump(), indent=2))
 
     # Get embeddings for CV and JD chunks       
     cv_chunk_embeddings = embedder.embed_batch(cv_chunks)
@@ -91,6 +93,8 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
         # question_embedding = [get_embeddings(chunk) for chunk in qa_chunks]
         sim_cv = np.max(cosine_similarity(q_embedding, np.array(cv_chunk_embeddings)))
         sim_jd = np.max(cosine_similarity(q_embedding, np.array(jd_chunk_embeddings)))
+
+        print(sim_cv, sim_jd)
 
         # Mark as hallucinated if low similarity to both CV and JD
         if sim_cv < threshold and sim_jd < threshold:

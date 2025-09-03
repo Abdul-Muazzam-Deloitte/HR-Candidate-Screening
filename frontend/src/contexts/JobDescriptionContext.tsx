@@ -37,7 +37,7 @@ export const JobDescriptionProvider: React.FC<JobDescriptionProviderProps> = ({ 
         '5+ years of React development experience',
         'Strong understanding of JavaScript and TypeScript'
       ],
-      skills: ['React', 'TypeScript', 'JavaScript', 'HTML', 'CSS', 'Node.js'],
+      skills: ['Angular', 'C#' ,'React', 'TypeScript', 'JavaScript', 'HTML', 'CSS', 'SQL'],
       createdAt: new Date('2024-01-15'),
       updatedAt: new Date('2024-01-15')
     },

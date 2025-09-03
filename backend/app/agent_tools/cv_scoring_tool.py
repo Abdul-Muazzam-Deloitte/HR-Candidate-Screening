@@ -2,6 +2,7 @@ from langchain.tools import tool
 from langchain.prompts import PromptTemplate
 from app.llm_handler.llm_handler import ChatCompletionHandler
 from app.models.score_result import CVScore
+from app.models.job_description import JobDescription
 
 from ag_ui.core import (
     RunStartedEvent,
@@ -21,7 +22,7 @@ from langgraph.config import get_stream_writer
 import uuid
 
 @tool
-def score_cv_against_jd(cv_data: str, job_description: str) -> CVScore:
+def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScore:
     """Score a CV against a job description using an LLM.
 
     Args:
@@ -53,7 +54,6 @@ def score_cv_against_jd(cv_data: str, job_description: str) -> CVScore:
         output_model=CVScore,
         node_id="cv_scoring"
     )
-    print(result)
 
     # # Generate a unique message_id for this streaming session
     # message_id = str(uuid.uuid4())
@@ -155,7 +155,7 @@ def score_cv_against_jd(cv_data: str, job_description: str) -> CVScore:
 
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - cv_scoring - Generating CV score completed successfully"))  
-    return CVScore(**result)
+    return result
     
 
 

@@ -7,6 +7,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSock
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 
+from app.models.job_description import JobDescription
+
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploaded_cvs")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -44,21 +46,8 @@ def root():
 #         raise HTTPException(status_code=500, detail=str(e))
 
 # @app.post("/extract_cv_contents", summary="Document Extraction", tags=["Extraction"])
-# def run_document_extraction(file: UploadFile = File(...)):
-#     try:
-#         # Save uploaded file to disk
-#         file_location = os.path.join(UPLOAD_DIR, file.filename)
-#         with open(file_location, "wb") as buffer:
-#             shutil.copyfileobj(file.file, buffer)
-
-#         # Run extraction on saved file
-#         document_extractor = DocumentExtractor(filepath=file_location)
-#         result =  document_extractor.extract_cv_info()
-
-#         return result
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+# def run_document_extraction():
+#     summarize_user_projects("Abdul-Muazzam-Deloitte")
 
 # @app.websocket("/ws/run-screening")
 # async def ws_run_screening(websocket: WebSocket):
@@ -116,12 +105,14 @@ async def agui_ws(ws: WebSocket):
 
         file_name = data["payload"]["fileName"]
         file_content = data["payload"]["fileContent"]
+        job_description = JobDescription(**data["payload"]["job_description"])
+
         # Save uploaded file
         file_location = os.path.join(UPLOAD_DIR, file_name)
         with open(file_location, "wb") as f:
             f.write(base64.b64decode(file_content))
 
-        async for update in hr_screening_workflow(file_location):
+        async for update in hr_screening_workflow(file_location, job_description):
             await ws.send_text( encoder.encode(update))
 
         # document_Extractor  = DocumentExtractor(filepath=file_location, ws=ws, encoder=encoder)
@@ -151,6 +142,8 @@ async def main():
     else:
         print("Google API Key and Landing AI API Key are set.")
         # hr_screening_workflow()
+
+
 
 if __name__ == "__main__":
     asyncio.run(main())
