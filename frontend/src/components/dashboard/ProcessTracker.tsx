@@ -6,7 +6,7 @@ import {
   Loader2,
   ChevronRight,
 } from "lucide-react";
-import { NodeStep, ProcessNode, ScreeningSession } from "../../types";
+import { ProcessStep, ProcessNode, ScreeningSession } from "../../types";
 import { useScreening } from "../../contexts/ScreeningContext";
 
 interface ProcessTrackerProps {
@@ -42,7 +42,7 @@ export const ProcessTracker: React.FC<ProcessTrackerProps> = ({
     }
   };
 
-  const getStepIcon = (status: NodeStep["status"]) => {
+  const getStepIcon = (status: ProcessStep["status"]) => {
     switch (status) {
       case "completed":
         return <CheckCircle className="w-5 h-5 text-green-600" />;

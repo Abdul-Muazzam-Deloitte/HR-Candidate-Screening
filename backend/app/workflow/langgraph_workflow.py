@@ -13,6 +13,7 @@ from app.nodes.social_media_screening_node import social_media_screening_node
 from app.nodes.candidate_assessment_score_node import candidate_assessment_score_node
 from app.nodes.interview_questions_node import interview_questions_node
 from app.nodes.candidate_report_node import send_report_node as candidate_report_node
+from app.nodes.project_contribution_node import project_contribution_node
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -55,6 +56,7 @@ def create_cv_scoring_workflow():
     workflow.add_node("landingai_extraction", landingai_extraction_node)
     workflow.add_node("cv_scoring", cv_scoring_node)
     workflow.add_node("social_media_screening", social_media_screening_node)
+    workflow.add_node("project_contribution", project_contribution_node)
     workflow.add_node("candidate_assessment_score", candidate_assessment_score_node)
     workflow.add_node("interview_questions", interview_questions_node)
     workflow.add_node("send_candidate_report", candidate_report_node)
@@ -68,7 +70,7 @@ def create_cv_scoring_workflow():
         if state.get("error"):
             return "error_handler"
         # This will trigger both nodes to run in parallel
-        return ("cv_scoring", "social_media_screening")
+        return ("cv_scoring", "social_media_screening", "project_contribution")
     
             # Critical routing after score merging
     def route_after_scoring(state):
@@ -94,6 +96,11 @@ def create_cv_scoring_workflow():
 
     workflow.add_conditional_edges(
         "social_media_screening",
+        lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
+    )
+
+    workflow.add_conditional_edges(
+        "project_contribution",
         lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
     )
 
@@ -156,19 +163,11 @@ async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
             communication=ScoreDetail(score=1, notes=""),
             overall_recommendation="Moderate Fit"
         ),
+        project_info=None,
         social_media_score=None,
         candidate_final_score=CandidateFinalScore(
-            cv_assessment=CVScore(
-                technical_skills=ScoreDetail(score=1, notes=""),
-                experience_relevance=ScoreDetail(score=1, notes=""),
-                years_experience=ScoreDetail(score=1, notes=""),
-                project_fit=ScoreDetail(score=1, notes=""),
-                soft_skills=ScoreDetail(score=1, notes=""),
-                education_certifications=ScoreDetail(score=1, notes=""),
-                communication=ScoreDetail(score=1, notes=""),
-                overall_recommendation="Moderate Fit"
-            ),
-            social_media_assessment=None,
+            cv_assessment="",
+            social_media_assessment="",
             final_recommendation="",
             proceed_to_interview="No"
         ),

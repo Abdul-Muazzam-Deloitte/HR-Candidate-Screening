@@ -5,6 +5,7 @@ class SocialMediaScore(BaseModel):
     """Social media screening result"""
     model_config = ConfigDict(extra="ignore")
 
+    social_media_platform: str = Field(description="Name of Social media platform reviewed")
     professional_presence: ScoreDetail = Field(description="Professional online presence assessment")
     content_quality: ScoreDetail = Field(description="Quality and appropriateness of shared content")
     industry_engagement: ScoreDetail = Field(description="Engagement with industry-related topics and discussions")

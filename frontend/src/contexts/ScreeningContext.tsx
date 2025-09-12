@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ScreeningSession, ProcessStep, Report, ProcessNode, InterviewQuestions, Question } from '../types';
 import { apiService } from '../services/apiService';
+import { useParams } from 'react-router-dom';
 
 // interface ScreeningContextType {
 //   sessions: ScreeningSession[];
@@ -45,7 +46,10 @@ interface ScreeningProviderProps {
 }
 
 export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }) => {
+
+
   const [sessions, setSessions] = useState<ScreeningSession[]>([]);
+  const [sessionId, setSessionId] = useState<string>('');
   const [processNodes, setProcessNodes] = useState<ProcessNode[]>([]);
   // const [currentSession, setCurrentSessionState] = useState<ScreeningSession>();
   const [reports, setReports] = useState<Report[]>([]);
@@ -62,9 +66,10 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
   };
   
 
-  function createNodeFromRunStarted(event: any): ProcessNode {
+  function createNodeFromRunStarted(sessionId: string, event: any): ProcessNode {
     return {
       id: event.runId,
+      sessionId: sessionId,
       name: `${event.threadId}`,
       status: "in_progress",
       message: `Executing ${event.threadId}...`,
@@ -137,12 +142,28 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     // Extract CV contents using API
   const extractCVContents = async (sessionId: string, job_description: any, cvFile: File) => {
     setIsProcessing(true);
+    setSessionId(sessionId)
     try {
       await apiService.extractCVContents(cvFile, job_description, (event: any) => handleWorkflowEvent(sessionId, event));
     } finally {
       setIsProcessing(false);
     }
   };
+
+  useEffect(() => {
+    console.log("Process nodes updated:", processNodes);
+    console.log(sessionId)
+         setSessions(prev => prev.map(session =>
+    session.id === sessionId
+      ? {
+          ...session,
+          processNodes: processNodes,
+          updatedAt: new Date(),
+        }
+      : session
+  ));
+
+  }, [processNodes]);
 
 
   // --- Helper: reset workflow steps (new candidate etc.)
@@ -151,7 +172,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
     setProcessNodes(prevNodes => {
       switch (event.type) {
         case "RUN_STARTED": {
-          const newNode = createNodeFromRunStarted(event);
+          const newNode = createNodeFromRunStarted(sessionId,event);
 
           updateSessionStatus(sessionId,event.runId);
           return [...prevNodes, newNode];
@@ -281,6 +302,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       status: 'document_extraction',
       createdAt: new Date(),
       updatedAt: new Date(),
+      processNodes: []
     };
 
     setSessions(prev => [...prev, newSession]);

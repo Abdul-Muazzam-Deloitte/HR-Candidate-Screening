@@ -174,7 +174,7 @@ export const SessionDetailsPage: React.FC = () => {
           <div className="lg:col-span-2">
             <ProcessTracker
               session={currentSession}
-              nodes={processNodes}
+              nodes={currentSession.processNodes}
             />
           </div>
         </div>

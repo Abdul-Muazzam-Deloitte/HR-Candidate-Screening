@@ -87,6 +87,7 @@ export interface ScreeningSession {
   answers?: Answer[];
   finalScore?: number;
   recommendation?: string;
+  processNodes?: ProcessNode[];
 }
 
 export type Status = "pending" | "in_progress" | "completed" | "failed" | "error";
@@ -101,6 +102,7 @@ export interface ProcessStep {
 }
 
 export interface ProcessNode {
+  sessionId: string; // associated screening session
   id: string; // node identifier (same as runId)
   name: string; // human-readable name
   status: Status;

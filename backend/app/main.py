@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 
 from app.models.job_description import JobDescription
+from app.models.project_info import ProjectInfo, RepositoryInfo
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploaded_cvs")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -47,7 +48,8 @@ def root():
 
 # @app.post("/extract_cv_contents", summary="Document Extraction", tags=["Extraction"])
 # def run_document_extraction():
-#     summarize_user_projects("Abdul-Muazzam-Deloitte")
+#     project_info = get_project_summary("https://github.com/Abdul-Muazzam-Deloittess")
+#     print(project_info)
 
 # @app.websocket("/ws/run-screening")
 # async def ws_run_screening(websocket: WebSocket):
@@ -143,7 +145,72 @@ async def main():
         print("Google API Key and Landing AI API Key are set.")
         # hr_screening_workflow()
 
+        
+
+# import requests
+# import base64
+
+# GITHUB_TOKEN = os.environ.get("GITHUB_API_KEY")  # optional but recommended
+# HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+
+# GITHUB_TOKEN = os.environ.get("GITHUB_API_KEY")  # optional but recommended
+# HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
 
+# def get_project_summary(project_url: str):
+
+#     username = extract_username(project_url)
+
+#     if not username:
+#         return {"error": "Invalid GitHub URL provided"}
+#     repositories = list_user_repos(username)
+#     print(repositories)
+
+#     if not repositories:
+#         return {"error": "No repositories found or unable to fetch repositories"}
+
+#     project_info = []
+#     for repository in repositories:
+#         repo_info = summarize_repo(username, repository["name"], repository["fork"])
+
+#         # print(repo_info)
+#         project_info.append(repo_info)
+
+
+#     return ProjectInfo(platform="GitHub", repositories=project_info)
+
+# from urllib.parse import urlparse
+# def extract_username(project_url: str) -> str:
+#     """Extract the username from a GitHub URL."""
+#     parsed_url = urlparse(project_url)
+
+#     # Extract the username
+#     username = parsed_url.path.strip('/')
+#     return username
+    
+# def list_user_repos(username):
+#     url = f"https://api.github.com/users/{username}/repos"
+#     response = requests.get(url, headers=HEADERS)
+
+#     if response.status_code != 200:
+#         return []
+    
+#     # print(response.json())
+#     return [
+#         {"name": repo["name"], "fork": repo["fork"]}
+#         for repo in response.json()
+#     ]
+
+# def summarize_repo(username, repository_name, repository_fork):
+
+#     url = f"https://api.github.com/repos/{username}/{repository_name}/readme"
+#     response = requests.get(url, headers=HEADERS)
+#     if response.status_code != 200:
+#         return RepositoryInfo(name=repository_name, url=f"https://github.com/{username}/{repository_name}", description="No description available", fork=False)
+    
+#     item = response.json()
+#     read_me_content = base64.b64decode(item["content"]).decode("utf-8")
+#     # Here you can add logic to summarize the files or extract relevant information
+#     return RepositoryInfo(name=repository_name, url=f"https://github.com/{username}/{repository_name}", description=read_me_content, fork=repository_fork)
 if __name__ == "__main__":
     asyncio.run(main())

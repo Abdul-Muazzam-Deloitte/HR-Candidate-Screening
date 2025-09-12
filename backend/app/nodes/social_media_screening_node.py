@@ -29,7 +29,7 @@ def social_media_screening_node(state: CVProcessingState):
         if state.get("error") or not state.get("cv_data").linkedin_url:
         # if state.get("error") or not state.get("cv_data")["linkedin_url"]:
             # return state
-            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening"))
+            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening", result= { "note" : "No LinkedIn URL available for screening"}))
             return state["messages"].append({"type": "warning", "content": "No LinkedIn URL available for screening"})
 
         social_score_dict = get_social_media_presence.invoke({
@@ -38,7 +38,7 @@ def social_media_screening_node(state: CVProcessingState):
         })
 
         if not social_score_dict:
-            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening"))
+            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="social_media_screening", result= { "note" : "No social media information available"}))
             return {"social_media_score": None}
         
         # Check if the result contains an error

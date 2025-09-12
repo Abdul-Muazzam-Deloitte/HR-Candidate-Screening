@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users  } from 'lucide-react';
+import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users, Briefcase } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -31,6 +31,8 @@ export const SessionsList: React.FC = () => {
         return 'bg-indigo-100 text-indigo-800';
       case 'evaluated':
         return 'bg-green-100 text-green-800';
+      case 'project_contribution':
+        return 'bg-lime-100 text-lime-800'; 
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -58,6 +60,8 @@ const getStatusIcon = (status: string) => {
       return <CheckCircle className="w-4 h-4" />;
     case 'evaluated':
       return <CheckCircle className="w-4 h-4" />;
+    case 'project_contribution':
+      return <Briefcase className="w-4 h-4" />;
     default:
       return <Clock className="w-4 h-4" />;
   }
@@ -200,7 +204,7 @@ const getStatusIcon = (status: string) => {
                       Start Interview
                     </button>
                   )}
-                  
+                  {user?.role === 'hr' && (
                   <button
                     onClick={() => handleViewSession(session.id)}
                     className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -208,6 +212,7 @@ const getStatusIcon = (status: string) => {
                     <Eye className="w-4 h-4 mr-1" />
                     View
                   </button>
+                  )}
                 </div>
               </td>
             </tr>

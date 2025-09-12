@@ -18,10 +18,12 @@ from ag_ui.core import (
 
 from langgraph.config import get_stream_writer
 
+from app.models.social_media_score import SocialMediaScore
+
 
 @tool
 def candiate_assessment_process(candidate_cv_score: CVScore
-                                , candidate_social_score: Optional[str] | None
+                                , candidate_social_score: Optional[SocialMediaScore] | None
                                 ) -> CandidateFinalScore:
     
     """Generates a final assessment score based on the candidate's CV score and social media screening results.

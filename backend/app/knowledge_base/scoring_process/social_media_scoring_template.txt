@@ -26,35 +26,9 @@ Are there any concerning patterns, such as aggressive behavior, misinformation, 
 In case there are any red flags, return the contents which would be considered a red flag.
 
 
+IMPORTANT: You must respond with valid JSON that matches this exact structure:
+{output_model_structure}
 
-Output Format (JSON):
-Return your assessment strictly in the following JSON format matching this structure:
-
-
-```json
-{
-  "professional_presence": {
-    "score": 4,
-    "notes": "The user maintains a complete and professional LinkedIn profile, with clear credentials and experience."
-  },
-  "content_quality": {
-    "score": 5,
-    "notes": "Posts are thoughtful, articulate, and include helpful career advice and industry insights."
-  },
-  "industry_engagement": {
-    "score": 4,
-    "notes": "The user regularly posts about software engineering, AI, and contributes to discussions on emerging tech."
-  },
-  "communication_style": {
-    "score": 5,
-    "notes": "Comments are polite, constructive, and professionally phrased."
-  },
-  "red_flags": {
-    "score": 5,
-    "notes": "No red flags identified."
-  },
-  "overall_social_score": 5,
-  "screening_recommendation": "Clear"
-}
+Return only the JSON response without any markdown formatting or additional text.
 
 If social media screening is not possible, respond with why the screening failed.
