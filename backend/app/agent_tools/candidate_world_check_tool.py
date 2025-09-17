@@ -33,21 +33,13 @@ def candidate_world_check(candidate_cv_data: Candidate):
 
     return candidate_world_check
 
-def get_candidate_world_check_info(candidate_info: Candidate) -> WorldCheck: 
+def get_candidate_world_check_info(candidate_info: Candidate): 
 
     try: 
         response =  get_world_check_info(candidate_info)
 
         if not response:
-            return WorldCheck( nationality_id="",
-            passport_id="",
-            first_name="",
-            last_name="",
-            address="",
-            email="test@test.com",
-            phone_number="",
-            nationality="",
-            morality="")
+            return None
 
         return WorldCheck(**response)
     except Exception as e:

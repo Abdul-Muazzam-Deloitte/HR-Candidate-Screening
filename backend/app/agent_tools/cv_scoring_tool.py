@@ -31,7 +31,7 @@ def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScor
     Returns:
         CVScore: The score result object containing the CV score.
     """  
-    
+
     writer = get_stream_writer()
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - cv_scoring - Generating CV score..."))  
     # Load prompt templates
@@ -41,7 +41,7 @@ def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScor
     user_prompt = PromptTemplate.from_template(user_message)
     formatted_user_message = user_prompt.format(
         output_model_structure=CVScore.model_json_schema(),
-        job_description=job_description,
+        job_description=job_description.model_dump_json(exclude={"job_postings_vector"}),
         candidate_cv_content=cv_data
     )
 

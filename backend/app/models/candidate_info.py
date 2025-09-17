@@ -6,8 +6,8 @@ class Experience(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     company: str = Field(description="Company name")
-    position: str = Field(description="Job position/title") 
-    duration: str = Field(description="Duration of employment")
+    position: str = Field(description="Job position/title within the company") 
+    duration: str = Field(description="Duration of employment within the company")
     responsibilities: List[str] = Field(description="Key responsibilities and achievements")
 
 class Education(BaseModel):

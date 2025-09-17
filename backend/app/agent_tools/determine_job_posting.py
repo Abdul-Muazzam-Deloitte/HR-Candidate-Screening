@@ -72,16 +72,7 @@ def determine_job_posting(candidate_cv_data: str,  threshold: float = 0.5) -> Jo
     
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="3 - job_posting_determination - Evaluating job postings"))  
 
-    best_match = {"job_description": JobDescription(id="", 
-                                                    description ="", 
-                                                    title="", 
-                                                    department="", 
-                                                    experience="", 
-                                                    skills=[], 
-                                                    requirements=[], 
-                                                    createdAt=datetime.now(), 
-                                                    updatedAt=datetime.now(),
-                                                    job_postings_vector=""), 
+    best_match = {"job_description": None,
                     "similarity": 0.0
                 }
 

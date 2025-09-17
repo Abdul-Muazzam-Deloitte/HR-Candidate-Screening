@@ -26,8 +26,8 @@ def job_posting_determination_node(state: CVProcessingState):
             "candidate_cv_data" : state["cv_data"].markdown
         })
 
-        if not job_description or len(job_description) == 0:
-            writer(RunErrorEvent(type=EventType.RUN_ERROR, message="job_posting_determination - No job posting available for determination"))
+        if not job_description or job_description is None:
+            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Job Posting Determination Process", run_id="job_posting_determination", result={"note" : "No job posting available for candidate" }))
             return {"error": "No job posting available for determination"}
         
         # Validate with Pydantic

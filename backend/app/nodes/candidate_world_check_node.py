@@ -36,7 +36,7 @@ def world_check_node(state: CVProcessingState):
 
         if not candidate_world_check_info:
             writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="World Check Process", run_id="world_check", result = { "note" : "No Info available in world check database"}))
-            return {"project_info": None}
+            return {"world_check": None}
         
         # Check if the result contains an error
         if "error" in candidate_world_check_info:

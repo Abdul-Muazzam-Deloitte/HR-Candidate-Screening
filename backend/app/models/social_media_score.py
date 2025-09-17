@@ -12,4 +12,4 @@ class SocialMediaScore(BaseModel):
     communication_style: ScoreDetail = Field(description="Online communication style and professionalism")
     red_flags: ScoreDetail = Field(description="Any concerning content or behavior (1=Many Issues, 5=No Issues)")
     overall_social_score: int = Field(description="Overall social media score out of 5", ge=1, le=5)
-    screening_recommendation: str = Field(description="Social screening recommendation: Clear, Concern, or Major Red Flag")
+    screening_recommendation: str = Field(description="Social screening recommendation: Inconclusive, Clear, Concern, or Major Red Flag")
