@@ -20,3 +20,5 @@ Candidate Final Score and Summary:
 
 IMPORTANT: You must respond with valid JSON that matches this exact structure:
 {output_model_structure}
+
+Return only the JSON response without any markdown formatting or additional text.

@@ -3,13 +3,17 @@ from typing import List, Optional
 
 class Experience(BaseModel):
     """Work experience entry"""
+    model_config = ConfigDict(extra="ignore")
+
     company: str = Field(description="Company name")
-    position: str = Field(description="Job position/title") 
-    duration: str = Field(description="Duration of employment")
+    position: str = Field(description="Job position/title within the company") 
+    duration: str = Field(description="Duration of employment within the company")
     responsibilities: List[str] = Field(description="Key responsibilities and achievements")
 
 class Education(BaseModel):
     """Education entry"""
+    model_config = ConfigDict(extra="ignore")
+
     institution: str = Field(description="Educational institution")
     degree: str = Field(description="Degree or qualification")
     field: str = Field(description="Field of study")
@@ -17,12 +21,18 @@ class Education(BaseModel):
 
 class SocialLinks(BaseModel):
     """Social media links"""
+    model_config = ConfigDict(extra="ignore")
+
     platform: str = Field(description="Name of the social media platform in candidate's profile")
     url: str = Field(description="Url to the candidate's social profile on the platform")
 
 class Candidate(BaseModel):
-
-    name: str = Field(description="the full name of the candidate")
+    """Candidate CV and profile information"""
+    model_config = ConfigDict(extra="ignore")
+    
+    first_name: str = Field(description="the first name of the candidate")
+    last_name: str = Field(description="the last name of the candidate")
+    name: str = Field(description= "the full name of the candidate")
     email: EmailStr = Field(description="the email of the candidate")
     phone: Optional[str] = Field(default=None, description="The candidate's phone number")
     address: Optional[str]= Field(default=None, description="The candidate's address")

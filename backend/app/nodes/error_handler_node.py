@@ -1,4 +1,4 @@
-from models.graph_state import CVProcessingState
+from app.models.graph_state import CVProcessingState
 
 def error_handler_node(state: CVProcessingState) -> CVProcessingState:
     """Node to handle errors in the CV processing workflow.

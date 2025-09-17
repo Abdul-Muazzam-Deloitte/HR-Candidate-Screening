@@ -15,9 +15,10 @@ Your task is to generate a comprehensive and targeted set of interview questions
 - **Areas to Probe** — List specific technical or behavioral areas that should be explored further based on gaps or ambiguity in the CV or job fit.
 - **Interview Duration** — Suggest a total time estimate for this interview.
 
-Return your output strictly in the following JSON format:
-
+IMPORTANT: You must respond with valid JSON that matches this exact structure:
 {output_model_structure}
+
+Return only the JSON response without any markdown formatting or additional text.
 
 ---
 
