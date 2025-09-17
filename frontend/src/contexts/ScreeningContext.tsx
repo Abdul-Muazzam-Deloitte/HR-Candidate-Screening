@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { ScreeningSession, ProcessStep, Report, ProcessNode, InterviewQuestions, Question } from '../types';
+import { ScreeningSession, ProcessStep, Report, ProcessNode, JobDescription, Question } from '../types';
 import { apiService } from '../services/apiService';
 import { useParams } from 'react-router-dom';
 
@@ -21,10 +21,10 @@ interface ScreeningContextType {
   // currentSession?: ScreeningSession;
   processNodes: ProcessNode[];
   reports: any[];
-  createSession: (candidate: any, job: any, file: File) => Promise<ScreeningSession>;
+  createSession: (candidate: any, file: File) => Promise<ScreeningSession>;
   updateSession: (sessionId: string, updatedFields: Partial<ScreeningSession>) => void;
   updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
-  extractCVContents: (sessionId: string, job_description: any,  cvFile: File) => Promise<void>;
+  extractCVContents: (sessionId: string, cvFile: File) => Promise<void>;
   // setCurrentSession: (session: any) => void;
   handleWorkflowEvent: (sessionId: string, event: any) => void;
   // resetCurrentSession: () => void;
@@ -140,11 +140,11 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 }
 
     // Extract CV contents using API
-  const extractCVContents = async (sessionId: string, job_description: any, cvFile: File) => {
+  const extractCVContents = async (sessionId: string, cvFile: File) => {
     setIsProcessing(true);
     setSessionId(sessionId)
     try {
-      await apiService.extractCVContents(cvFile, job_description, (event: any) => handleWorkflowEvent(sessionId, event));
+      await apiService.extractCVContents(cvFile, (event: any) => handleWorkflowEvent(sessionId, event));
     } finally {
       setIsProcessing(false);
     }
@@ -181,6 +181,10 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
         case "RUN_FINISHED": {
           if (event.runId === 'document_extraction' && event.result) {
             updateCandidateFromExtraction(sessionId, event.result);
+          }
+
+          if (event.runId === 'job_posting_determination' && event.result) {
+            updateJobDescription(sessionId, event.result);
           }
 
           if (event.runId === 'question_generation' && event.result) {
@@ -261,13 +265,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       experience: extractedData.experience,
       education: extractedData.education,
     };
-
-    // console.log('Updated candidate:', updatedCandidate);
-
-    // updateSession(sessionId, {
-    //   candidate: extractedData.candidate,
-    //   status: 'document_extraction',
-    // });
     
     // Update sessions array
     setSessions(prev => prev.map(session => 
@@ -283,21 +280,44 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
         : session
     ));
     
-    // // Update current session
-    // setCurrentSessionState(prev => prev ? { 
-    //   ...prev, 
-    //   candidate: updatedCandidate, 
-    //   updatedAt: new Date() 
-    // } : undefined);
   };
 
-  const createSession = async (candidateData: any, jobDescription: any, cvFile?: File): Promise<ScreeningSession> => {
+    const updateJobDescription = (sessionId: string , extractedData: any) => {  
+
+    // Update the current session's candidate with extracted data
+    const updatedJobDescription = {
+      id: extractedData.id,
+      title: extractedData.title,
+      department: extractedData.department,
+      description: extractedData.description,
+      requirements: extractedData.requirements,
+      experience: extractedData.experience,
+      skills: extractedData.skills,
+      createdAt: extractedData.createdAt,
+      updatedAt: extractedData.updatedAt,
+    };
+
+    // Update sessions array
+    setSessions(prev => prev.map(session => 
+      session.id === sessionId 
+        ? { 
+            ...session, 
+            jobDescription: { 
+              ...session.jobDescription, 
+              ...updatedJobDescription 
+            }, 
+            updatedAt: new Date() 
+          }
+        : session
+    ));
+  };
+
+  const createSession = async (candidateData: any, cvFile?: File): Promise<ScreeningSession> => {
     setIsLoading(true);
     
     const newSession: ScreeningSession = {
       id: Date.now().toString(),
       candidate: { ...candidateData, cvFile },
-      jobDescription,
       cvFile,
       status: 'document_extraction',
       createdAt: new Date(),

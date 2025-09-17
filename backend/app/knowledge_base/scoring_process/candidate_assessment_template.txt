@@ -9,7 +9,7 @@ Step 1: Understand the Input
 You will be given:
 - A detailed `cv_score` dictionary evaluating the candidate across multiple criteria such as technical skills, experience, communication, and cultural fit.
 - A `social_media_score` dictionary (optional). This may include scores on professional presence, communication style, red flags, and industry engagement. If it's missing or shows content was inaccessible, you must make a decision based on the CV score alone.
-
+- A `world_check_score` dictionary (optional). This inlcude morality result.
 ---
 
 Step 2: Analyze the Provided Information
@@ -17,7 +17,9 @@ Step 2: Analyze the Provided Information
 Evaluate the overall strengths and weaknesses of the candidate using the given scores and notes:
 - Consider whether they meet the technical and experiential expectations.
 - Consider their professionalism and reputation online if social media data is present.
+- Consider their morality result if world check data is present.
 - If social media data is inaccessible, clearly state that limitation and continue based on the CV.
+- If world check data is inaccessible, clearly state that limitation and continue based on the CV.
 
 ---
 
@@ -33,3 +35,6 @@ Scoring of cv:
 
 Social Media Score if available:
 {social_media_score}
+
+World Check of available:
+{world_check_score}

@@ -1,42 +1,48 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users, Briefcase } from 'lucide-react';
+import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users, Briefcase, ClipboardCheck, Shield } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { ProcessNode } from '../../types';
 
 export const SessionsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { sessions } = useScreening();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-gray-100 text-gray-800';
-      case 'document_extraction':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cv_scoring':
-        return 'bg-orange-100 text-orange-800';
-      case 'social_media_screening':
-        return 'bg-pink-100 text-pink-800';
-      case 'candidate_assessment':
-        return 'bg-teal-100 text-teal-800';
-      case 'report_generation':
-        return 'bg-cyan-100 text-cyan-800';
-      case 'question_generation':
-        return 'bg-blue-100 text-blue-800';
-      case 'interview_in_progress':
-        return 'bg-purple-100 text-purple-800';
-      case 'interview_completed':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'evaluated':
-        return 'bg-green-100 text-green-800';
-      case 'project_contribution':
-        return 'bg-lime-100 text-lime-800'; 
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-gray-100 text-gray-800';
+    case 'document_extraction':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'cv_scoring':
+      return 'bg-orange-100 text-orange-800';
+    case 'social_media_screening':
+      return 'bg-pink-100 text-pink-800';
+    case 'candidate_assessment':
+      return 'bg-teal-100 text-teal-800';
+    case 'report_generation':
+      return 'bg-cyan-100 text-cyan-800';
+    case 'question_generation':
+      return 'bg-blue-100 text-blue-800';
+    case 'interview_in_progress':
+      return 'bg-purple-100 text-purple-800';
+    case 'interview_completed':
+      return 'bg-indigo-100 text-indigo-800';
+    case 'evaluated':
+      return 'bg-green-100 text-green-800';
+    case 'project_contribution':
+      return 'bg-lime-100 text-lime-800';
+    case 'job_posting_determination':
+      return 'bg-amber-100 text-amber-800'; 
+    case 'world_check':
+      return 'bg-red-100 text-red-800'; 
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -62,6 +68,10 @@ const getStatusIcon = (status: string) => {
       return <CheckCircle className="w-4 h-4" />;
     case 'project_contribution':
       return <Briefcase className="w-4 h-4" />;
+    case 'job_posting_determination':
+      return <ClipboardCheck  className="w-4 h-4" />; 
+    case 'world_check':
+      return <Shield className="w-4 h-4" />; // 
     default:
       return <Clock className="w-4 h-4" />;
   }
@@ -104,13 +114,13 @@ const getStatusIcon = (status: string) => {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Match Score
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Action
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
               </th>
             </tr>
           </thead>
@@ -150,10 +160,10 @@ const getStatusIcon = (status: string) => {
               <td className="px-6 py-4 whitespace-nowrap">
                 <div>
                   <div className="text-sm font-medium text-gray-900">
-                    {session.jobDescription.title}
+                    {session.jobDescription?.title ? session.jobDescription?.title : "-" }
                   </div>
                   <div className="text-sm text-gray-500">
-                    {session.jobDescription.department}
+                    {session.jobDescription?.department}
                   </div>
                 </div>
               </td>
@@ -166,31 +176,36 @@ const getStatusIcon = (status: string) => {
                 </span>
               </td>
 
-              {/* Match Score */}
-              <td className="px-6 py-4 whitespace-nowrap">
-                {/* {session.result.score > 0 ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          session.result.score >= 70 ? 'bg-green-500' : 
-                          session.result.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${session.result.score}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {session.result.score}%
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-500">-</span>
-                )} */}
-              </td>
-
               {/* Date */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(session.createdAt).toLocaleDateString()}
+              </td>
+              
+              {/* Match Score */}
+              <td className="px-6 py-4 whitespace-nowrap">
+
+                {/* {session.processNodes?.length && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm font-medium text-gray-900 mb-2">Interview Decisions</p>
+
+                    {session.processNodes.map((node: ProcessNode) => (
+                      node.result?.process_to_interview && (
+                        <p key={node.id} className="text-sm font-medium mb-1">
+                          {node.name}:
+                          <span
+                            className={`font-bold ${
+                              node.result.process_to_interview === 'Yes' ? 'text-green-600' : 'text-red-600'
+                            } ml-2`}
+                          >
+                            {node.result.process_to_interview === 'Yes' ? 'Go' : 'No Go'}
+                          </span>
+                        </p>
+                      )
+                    ))}
+                  </div>
+                )} 
+                */}
+
               </td>
 
               {/* Actions */}

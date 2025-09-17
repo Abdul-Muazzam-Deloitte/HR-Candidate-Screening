@@ -26,13 +26,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       roles: ['hr', 'candidate']
     },
     {
-      name: 'New Screening',
+      name: 'New Process',
       icon: Upload,
       path: '/new-screening',
       roles: ['hr']
     },
     {
-      name: 'Job Descriptions',
+      name: 'Job Postings',
       icon: FileText,
       path: '/job-descriptions',
       roles: ['hr']

@@ -11,7 +11,7 @@ export const NewScreeningPage: React.FC = () => {
   const navigate = useNavigate();
   const { createSession, extractCVContents } = useScreening();
   const { jobDescriptions } = useJobDescriptions();
-  const [step, setStep] = useState<'upload' | 'job-selection'>('upload');
+  const [step, setStep] = useState<'upload' | 'cv_matching'>('upload');
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,25 +32,22 @@ export const NewScreeningPage: React.FC = () => {
     };
     
     setCandidate(newCandidate);
-    setStep('job-selection');
+    setStep('cv_matching');
   };
 
   const handleJobSelection = async () => {
-    if (!candidate || !selectedJobId || !uploadedFile) return;
-    
-    const selectedJob = jobDescriptions.find(jd => jd.id === selectedJobId);
-    if (!selectedJob) return;
-    
+    if (!candidate || !uploadedFile) return;
+      
     setIsProcessing(true);
 
     try {
       // Create session first with basic candidate info
-      const session = await createSession(candidate, selectedJob, uploadedFile);
+      const session = await createSession(candidate, uploadedFile);
       navigate(`/candidate-details/${session.id}`);
 
       
       // 2️⃣ Call API service to start the workflow
-      await extractCVContents(session.id, selectedJob, uploadedFile);
+      await extractCVContents(session.id, uploadedFile);
     } catch (error) {
       console.error('Error creating session:', error);
     } finally {
@@ -58,7 +55,7 @@ export const NewScreeningPage: React.FC = () => {
     }
   };
 
-  const selectedJob = jobDescriptions.find(jd => jd.id === selectedJobId);
+  // const selectedJob = jobDescriptions.find(jd => jd.id === selectedJobId);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -91,14 +88,14 @@ export const NewScreeningPage: React.FC = () => {
               </div>
               
               <div className={`w-8 h-px ${
-                step === 'job-selection' ? 'bg-green-300' : 'bg-gray-300'
+                step === 'cv_matching' ? 'bg-green-300' : 'bg-gray-300'
               }`} />
               
               <div className={`flex items-center space-x-2 ${
-                step === 'job-selection' ? 'text-blue-600' : 'text-gray-400'
+                step === 'cv_matching' ? 'text-blue-600' : 'text-gray-400'
               }`}>
                 <Briefcase className="w-5 h-5" />
-                <span className="text-sm font-medium">Select Job Description</span>
+                <span className="text-sm font-medium">Matching Process</span>
               </div>
             </nav>
           </div>
@@ -116,13 +113,13 @@ export const NewScreeningPage: React.FC = () => {
                 </h2>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                   Start the screening process by uploading the candidate's resume. 
-                  We support PDF, DOC, and DOCX formats up to 10MB.
+                  We support PDF format up to 10MB.
                 </p>
               </div>
               
               <FileUpload
                 onFileSelect={handleFileUpload}
-                accept=".pdf,.doc,.docx"
+                accept=".pdf"
                 maxSize={10}
                 className={`${isProcessing ? 'opacity-50 pointer-events-none' : ''} mb-8`}
               />
@@ -146,15 +143,15 @@ export const NewScreeningPage: React.FC = () => {
           </div>
         )}
 
-        {step === 'job-selection' && candidate && (
+        {step === 'cv_matching' && candidate && (
           <div className="w-full max-w-4xl">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 lg:p-10">
               <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                  Select Job Description
+                  Proceed to Matching Process
                 </h2>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                  Choose the job description to match against {candidate.name}'s profile
+                  Start the matching process against {candidate.name}'s profile
                 </p>
               </div>
 
@@ -178,13 +175,13 @@ export const NewScreeningPage: React.FC = () => {
                     <p>File: {uploadedFile?.name}</p>
                     <p>Size: {uploadedFile ? (uploadedFile.size / 1024 / 1024).toFixed(2) : '0'} MB</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      CV content will be extracted when you start the screening process
+                      CV content will be extracted when you start the matching process
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Job Selection Dropdown */}
+              {/* Job Selection Dropdown
               <div className="mb-8">
                 <label className="block text-lg font-medium text-gray-700 mb-3">
                   Job Description *
@@ -226,9 +223,9 @@ export const NewScreeningPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
 
-              {/* Selected Job Preview */}
+              {/* Selected Job Preview
               {selectedJob && (
                 <div className="bg-blue-50 rounded-lg p-6 mb-8">
                   <h3 className="text-lg font-medium text-blue-900 mb-3">Selected Job Description</h3>
@@ -239,7 +236,7 @@ export const NewScreeningPage: React.FC = () => {
                     <p><strong>Key Skills:</strong> {selectedJob.skills.slice(0, 5).join(', ')}</p>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0 sm:space-x-4">
@@ -252,10 +249,10 @@ export const NewScreeningPage: React.FC = () => {
                 
                 <button
                   onClick={handleJobSelection}
-                  disabled={!selectedJobId || isProcessing}
+                  // disabled={!selectedJobId || isProcessing}
                   className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                 >
-                  {isProcessing ? 'Creating Session...' : 'Start Screening'}
+                  {isProcessing ? 'Creating Session...' : 'Start Process'}
                 </button>
               </div>
               

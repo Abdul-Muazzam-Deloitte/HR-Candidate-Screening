@@ -1,10 +1,10 @@
 from app.models.interview_questions import InterviewQAs
-from typing import List
+from typing import List, Optional
 import numpy as np
 from app.llm_handler.embedder import get_embeddings
 from langchain.tools import tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from app.llm_handler.embedder import GeminiEmbedder
+from app.llm_handler.embedder import OpenAIEmbedder
 
 from ag_ui.core import (
     RunStartedEvent,
@@ -21,6 +21,7 @@ from langgraph.config import get_stream_writer
 from app.models.job_description import JobDescription
 import json
 
+embedder = OpenAIEmbedder()
 
 @tool
 def validate_questions_semantically(interview_questions: InterviewQAs, candidate_cv_content: str, job_description: JobDescription, threshold: float = 0.5) -> List[dict]:
@@ -37,32 +38,12 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
         List[dict]: List of invalid questions with their similarity scores.
     """
     writer = get_stream_writer()
-
-    def chunk_documents(document: str, chunk_size=2000, chunk_overlap=200):
-        """ Splits the document into manageable chunks using LangChain.
-
-        Args:
-            docuemnt (str): Document to be chunked.
-            chunk_size (int): Size of each chunk.
-            chunk_overlap (int): Overlap between chunks.
-
-        Returns:
-            Tuple[List[str], List[str]]: Lists of CV and JD chunks.
-        """
-
-        splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-        document_chunks = splitter.split_text(document)
-        return document_chunks
-
-    embedder = GeminiEmbedder()
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="2 - question_generation - Embedding cv and job description"))  
     # Split CV and JD into chunks
-    cv_chunks = chunk_documents(candidate_cv_content)
-    jd_chunks = chunk_documents(json.dumps(job_description.model_dump(), indent=2))
+    cv_chunks = embedder.chunk_document(candidate_cv_content)
 
     # Get embeddings for CV and JD chunks       
-    cv_chunk_embeddings = embedder.embed_batch(cv_chunks)
-    jd_chunk_embeddings = embedder.embed_batch(jd_chunks)
+    cv_chunk_embeddings = embedder.embed_text(cv_chunks)
     
     hallucinated_questions = []
 
@@ -85,16 +66,17 @@ def validate_questions_semantically(interview_questions: InterviewQAs, candidate
         + interview_questions.situational_questions
         + interview_questions.cultural_fit_questions
     )
-
+    
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="3 - question_generation - performing Cosine similarity check on questions"))  
+    q_embedding = np.array(embedder.embed_text(all_questions)).reshape(1, -1)
+
+    jd_vecs = json.loads(job_description.job_postings_vector) if job_description.job_postings_vector is not None else None
 
     for qa in all_questions:
-        q_embedding = np.array(embedder.embed(qa)).reshape(1, -1)
+        
         # question_embedding = [get_embeddings(chunk) for chunk in qa_chunks]
-        sim_cv = np.max(cosine_similarity(q_embedding, np.array(cv_chunk_embeddings)))
-        sim_jd = np.max(cosine_similarity(q_embedding, np.array(jd_chunk_embeddings)))
-
-        print(sim_cv, sim_jd)
+        sim_cv = np.max(cosine_similarity(q_embedding, np.array(cv_chunk_embeddings).reshape(1, -1)))
+        sim_jd = np.max(cosine_similarity(q_embedding, np.array(jd_vecs).reshape(1, -1)))
 
         # Mark as hallucinated if low similarity to both CV and JD
         if sim_cv < threshold and sim_jd < threshold:

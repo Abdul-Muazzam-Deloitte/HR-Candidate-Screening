@@ -30,7 +30,9 @@ class Candidate(BaseModel):
     """Candidate CV and profile information"""
     model_config = ConfigDict(extra="ignore")
     
-    name: str = Field(description="the full name of the candidate")
+    first_name: str = Field(description="the first name of the candidate")
+    last_name: str = Field(description="the last name of the candidate")
+    name: str = Field(description= "the full name of the candidate")
     email: EmailStr = Field(description="the email of the candidate")
     phone: Optional[str] = Field(default=None, description="The candidate's phone number")
     address: Optional[str]= Field(default=None, description="The candidate's address")

@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { JobDescription } from '../types';
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../reducers/store";
+import {
+  createJobDescription as reduxCreateJobDescription,
+  updateJobDescription as reduxUpdateJobDescription,
+  getAllJobDescriptions as reduxGetAllJobDescriptions
+} from "../reducers/jobSlice";
 
 interface JobDescriptionContextType {
+  jobDescriptionList: JobDescription[];
   jobDescriptions: JobDescription[];
   createJobDescription: (jobDescription: Omit<JobDescription, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateJobDescription: (id: string, jobDescription: Partial<JobDescription>) => void;
@@ -24,54 +32,46 @@ interface JobDescriptionProviderProps {
 }
 
 export const JobDescriptionProvider: React.FC<JobDescriptionProviderProps> = ({ children }) => {
-  const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([
-    // Sample job descriptions
-    {
-      id: '1',
-      title: 'Senior React Developer',
-      department: 'Engineering',
-      description: 'We are looking for a Senior React Developer to join our frontend team.',
-      experience: 'Senior Level (5-8 years)',
-      requirements: [
-        'Bachelor\'s degree in Computer Science or related field',
-        '5+ years of React development experience',
-        'Strong understanding of JavaScript and TypeScript'
-      ],
-      skills: ['Angular', 'C#' ,'React', 'TypeScript', 'JavaScript', 'HTML', 'CSS', 'SQL'],
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-15')
-    },
-    {
-      id: '2',
-      title: 'Full Stack Developer',
-      department: 'Engineering',
-      description: 'Join our team as a Full Stack Developer working on cutting-edge web applications.',
-      experience: 'Mid Level (2-5 years)',
-      requirements: [
-        'Bachelor\'s degree in Computer Science',
-        '3+ years of full stack development experience',
-        'Experience with both frontend and backend technologies'
-      ],
-      skills: ['React', 'Node.js', 'Python', 'PostgreSQL', 'AWS', 'Docker'],
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-10')
-    }
-  ]);
 
-  const createJobDescription = (jobDescriptionData: Omit<JobDescription, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newJobDescription: JobDescription = {
-      ...jobDescriptionData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    setJobDescriptions(prev => [...prev, newJobDescription]);
+  const dispatch: AppDispatch = useDispatch();
+  const jobDescriptionList = useSelector((state: RootState) => state.jobs.items);
+
+  const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
+
+useEffect(() => {
+  const loadJobDescriptions = async () => {
+    try {
+      const response = await dispatch(reduxGetAllJobDescriptions()).unwrap();
+      setJobDescriptions(response);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const updateJobDescription = (id: string, updates: Partial<JobDescription>) => {
+  loadJobDescriptions();
+}, []);
+
+  const createJobDescription = async (jobDescriptionData: Omit<JobDescription, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // const newJobDescription: JobDescription = {
+    //   ...jobDescriptionData,
+    //   id: Date.now().toString(),
+    //   createdAt: new Date(),
+    //   updatedAt: new Date()
+    // };
+
+    const response = (await dispatch(reduxCreateJobDescription(jobDescriptionData)).unwrap());
+    setJobDescriptions(prev => [...prev, response]);
+
+
+  };
+
+  const updateJobDescription = async (id: string, updatedJobDescription: Partial<JobDescription>) => {
+    
+    const response = (await dispatch(reduxUpdateJobDescription({id,updatedJobDescription})).unwrap());
+
     setJobDescriptions(prev => prev.map(jd => 
       jd.id === id 
-        ? { ...jd, ...updates, updatedAt: new Date() }
+        ? { ...jd, ...response}
         : jd
     ));
   };
@@ -85,6 +85,7 @@ export const JobDescriptionProvider: React.FC<JobDescriptionProviderProps> = ({ 
   };
 
   const value: JobDescriptionContextType = {
+    jobDescriptionList,
     jobDescriptions,
     createJobDescription,
     updateJobDescription,

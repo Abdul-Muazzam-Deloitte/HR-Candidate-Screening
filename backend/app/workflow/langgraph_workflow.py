@@ -5,7 +5,7 @@ from app.models.interview_questions import InterviewQAs
 from app.models.score_result import CVScore, ScoreDetail
 from app.models.candidate_assessment import CandidateFinalScore
 from app.models.job_description import JobDescription
-
+from app.models.world_check import WorldCheck
 from app.nodes.document_extraction_node import landingai_extraction_node
 from app.nodes.cv_scoring_node import cv_scoring_node
 from app.nodes.error_handler_node import error_handler_node
@@ -14,27 +14,15 @@ from app.nodes.candidate_assessment_score_node import candidate_assessment_score
 from app.nodes.interview_questions_node import interview_questions_node
 from app.nodes.candidate_report_node import send_report_node as candidate_report_node
 from app.nodes.project_contribution_node import project_contribution_node
+from app.nodes.job_posting_determination_node import job_posting_determination_node
+from app.nodes.candidate_world_check_node import world_check_node
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import InMemorySaver
-
-from ag_ui.encoder import EventEncoder
-from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
-
-from ag_ui.core import (
-    RunStartedEvent,
-    RunFinishedEvent,
-    RunErrorEvent,
-    StepStartedEvent,
-    StepFinishedEvent,
-    TextMessageContentEvent,
-    EventType
-)
-
-import json
+from ag_ui.core import (RunErrorEvent,EventType)
 from ag_ui.core.events import BaseEvent
 import uuid
 from langchain_core.runnables import RunnableConfig
-
+from datetime import datetime
 from pydantic import BaseModel
 
 class DictEvent(BaseEvent, BaseModel):
@@ -49,30 +37,14 @@ def create_cv_scoring_workflow():
         StateGraph: The compiled workflow graph for CV processing.
     """
     
-    # Initialize the graph
-    workflow = StateGraph(CVProcessingState)
-    
-    # Add nodes
-    workflow.add_node("landingai_extraction", landingai_extraction_node)
-    workflow.add_node("cv_scoring", cv_scoring_node)
-    workflow.add_node("social_media_screening", social_media_screening_node)
-    workflow.add_node("project_contribution", project_contribution_node)
-    workflow.add_node("candidate_assessment_score", candidate_assessment_score_node)
-    workflow.add_node("interview_questions", interview_questions_node)
-    workflow.add_node("send_candidate_report", candidate_report_node)
-    workflow.add_node("error_handler", error_handler_node)
-    
-    # Define the flow
-    workflow.set_entry_point("landingai_extraction")
-
-        # After extraction, conditionally go to both scoring nodes in parallel
+    # After extraction, conditionally go to both scoring nodes in parallel
     def route_after_extraction(state):
         if state.get("error"):
             return "error_handler"
         # This will trigger both nodes to run in parallel
-        return ("cv_scoring", "social_media_screening", "project_contribution")
+        return ("cv_scoring", "social_media_screening", "project_contribution", "world_check")
     
-            # Critical routing after score merging
+    # Critical routing after score merging
     def route_after_scoring(state):
         if state.get("error"):
             return "error_handler"
@@ -83,9 +55,31 @@ def create_cv_scoring_workflow():
         else:
              return END
         
-    # # Add conditional edges
+    # Initialize the graph
+    workflow = StateGraph(CVProcessingState)
+    
+    # Add nodes
+    workflow.add_node("landingai_extraction", landingai_extraction_node)
+    workflow.add_node("job_determination", job_posting_determination_node)
+    workflow.add_node("cv_scoring", cv_scoring_node)
+    workflow.add_node("social_media_screening", social_media_screening_node)
+    workflow.add_node("project_contribution", project_contribution_node)
+    workflow.add_node("world_check", world_check_node)
+    workflow.add_node("candidate_assessment_score", candidate_assessment_score_node)
+    workflow.add_node("interview_questions", interview_questions_node)
+    workflow.add_node("send_candidate_report", candidate_report_node)
+    workflow.add_node("error_handler", error_handler_node)
+    
+    # Define the flow
+    workflow.set_entry_point("landingai_extraction")
+
     workflow.add_conditional_edges(
         "landingai_extraction",
+        lambda state: "error_handler" if state.get("error") else "job_determination"
+    )
+    # Add conditional edges
+    workflow.add_conditional_edges(
+        "job_determination",
         route_after_extraction
     )
 
@@ -132,7 +126,7 @@ def create_cv_scoring_workflow():
 
     return workflow.compile()
 
-async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
+async def hr_screening_workflow(pdf_path: str):
 
     print("Starting HR screening workflow...")
     # pdf_path = "app/knowledge_base/pdf_templates/ABDUL Muhammad Muazzam_Ul_Hussein CV.pdf"
@@ -142,8 +136,21 @@ async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
 
     initial_state = CVProcessingState(
         pdf_path=pdf_path,
-        job_description=job_description,
+        job_description=JobDescription(
+            id ="",
+            title="",
+            department="",
+            description="",
+            experience ="",
+            skills = [],
+            requirements = [],
+            createdAt= datetime.now(),
+            updatedAt= datetime.now(),
+            job_postings_vector=""
+        ),
         cv_data=Candidate(
+            first_name= "",
+            last_name= "",
             name="",
             email="test@test.com",
             summary="",
@@ -166,8 +173,9 @@ async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
         project_info=None,
         social_media_score=None,
         candidate_final_score=CandidateFinalScore(
-            cv_assessment="",
-            social_media_assessment="",
+            candidate_cv="",
+            social_media="",
+            world_check="",
             final_recommendation="",
             proceed_to_interview="No"
         ),
@@ -180,6 +188,18 @@ async def hr_screening_workflow(pdf_path: str, job_description: JobDescription):
             areas_to_probe=[],
             red_flag_questions=[],
             interview_duration=""
+        ),
+        world_check=WorldCheck(
+
+            nationality_id="",
+            passport_id="",
+            first_name="",
+            last_name="",
+            address="",
+            email="test@test.com",
+            phone_number="",
+            nationality="",
+            morality=""
         ),
         messages=[],
         error=""

@@ -28,10 +28,11 @@ def candidate_assessment_score_node(state: CVProcessingState):
         if state.get("error") or not state.get("cv_score"): 
             writer(RunErrorEvent(type=EventType.RUN_ERROR, message="candidate_assessment - No scoring available for this candidate."))
             return {"error": "No scoring available for this candidate."}
-        
+       
         final_score_object = candiate_assessment_process.invoke({
             "candidate_cv_score": state["cv_score"],
-            "candidate_social_score": None
+            "candidate_social_score": None,
+            "candidate_world_check_score": state["world_check"]
         })
 
         # return state

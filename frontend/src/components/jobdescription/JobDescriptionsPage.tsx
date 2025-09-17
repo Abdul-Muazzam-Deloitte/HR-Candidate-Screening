@@ -35,11 +35,11 @@ export const JobDescriptionsPage: React.FC = () => {
               <Briefcase className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              Job Descriptions
+              Job Postings
             </h1>
           </div>
           <p className="text-gray-600">
-            Manage job descriptions for candidate screening
+            Manage job postings for candidate screening
           </p>
         </div>
         
@@ -48,7 +48,7 @@ export const JobDescriptionsPage: React.FC = () => {
           className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
         >
           <Plus className="w-4 h-4" />
-          <span>New Job Description</span>
+          <span>New Job Posting</span>
         </button>
       </div>
 
@@ -117,7 +117,7 @@ export const JobDescriptionsPage: React.FC = () => {
               <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-3 h-3" />
-                  <span>Created {job.createdAt.toLocaleDateString()}</span>
+                  <span>Created {job.createdAt.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users className="w-3 h-3" />
@@ -136,14 +136,14 @@ export const JobDescriptionsPage: React.FC = () => {
                 No job descriptions yet
               </h3>
               <p className="text-gray-500 mb-4">
-                Create your first job description to start screening candidates
+                Create your first job posting to start screening candidates
               </p>
               <button
                 onClick={() => setShowForm(true)}
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create Job Description</span>
+                <span>Create Job Posting</span>
               </button>
             </div>
           </div>
@@ -157,7 +157,7 @@ export const JobDescriptionsPage: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {editingJob ? 'Edit Job Description' : 'Create New Job Description'}
+                  {editingJob ? 'Edit Job Posting' : 'Create New Job Posting'}
                 </h2>
                 <button
                   onClick={handleFormClose}

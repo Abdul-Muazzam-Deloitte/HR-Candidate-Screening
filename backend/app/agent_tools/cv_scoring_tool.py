@@ -31,7 +31,7 @@ def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScor
     Returns:
         CVScore: The score result object containing the CV score.
     """  
-
+    
     writer = get_stream_writer()
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - cv_scoring - Generating CV score..."))  
     # Load prompt templates

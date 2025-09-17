@@ -48,7 +48,7 @@ export const JobDescriptionForm: React.FC<JobDescriptionFormProps> = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const jobDescriptionData = {
@@ -73,7 +73,7 @@ export const JobDescriptionForm: React.FC<JobDescriptionFormProps> = ({
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
       <div className="flex items-center space-x-3 mb-6">
         <Briefcase className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-900">Job Description</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Job Posting</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -222,7 +222,7 @@ export const JobDescriptionForm: React.FC<JobDescriptionFormProps> = ({
             type="submit"
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
           >
-            {initialData ? 'Update Job Description' : 'Save Job Description'}
+            {initialData ? 'Update Job Posting' : 'Save Job Posting'}
           </button>
         </div>
       </form>

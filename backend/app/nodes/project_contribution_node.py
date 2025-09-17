@@ -41,7 +41,7 @@ def project_contribution_node(state: CVProcessingState):
         # Validate with Pydantic
         state["messages"].append({"type": "success", "content": "Projects screening completed"})
         
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Social Media Screening Process", run_id="project_contribution", result=project_contributions_dict))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Project Contribution Screening Process", run_id="project_contribution", result=project_contributions_dict))
         return {"project_info": project_contributions_dict}
         
     except Exception as e:

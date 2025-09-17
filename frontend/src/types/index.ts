@@ -30,7 +30,7 @@ export interface JobDescription {
   experience: string;
   skills: string[];
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
 
 export interface ScreeningResult {
@@ -78,7 +78,7 @@ export interface Answer {
 export interface ScreeningSession {
   id: string;
   candidate: Candidate;
-  jobDescription: JobDescription;
+  jobDescription?: JobDescription;
   cvFile?: File;
   questions?: ScreeningResult;
   status: 'pending' | 'document_extraction'| 'cv_scoring' | 'social_media_screening' | 'candidate_assessment'| 'report_generation' | 'question_generation' | 'interview_in_progress' | 'interview_completed' | 'evaluated';

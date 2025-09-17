@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@ag-ui/client": "^0.0.36",
+    "@reduxjs/toolkit": "^2.9.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.1"
   },
   "devDependencies": {

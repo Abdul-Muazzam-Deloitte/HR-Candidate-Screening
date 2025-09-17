@@ -3,6 +3,8 @@ from langchain.prompts import PromptTemplate
 from app.llm_handler.llm_handler import ChatCompletionHandler
 from app.models.candidate_assessment import CandidateFinalScore
 from app.models.score_result import CVScore
+from app.models.social_media_score import SocialMediaScore
+from app.models.world_check import WorldCheck
 from typing import Optional
 
 from ag_ui.core import (
@@ -18,12 +20,10 @@ from ag_ui.core import (
 
 from langgraph.config import get_stream_writer
 
-from app.models.social_media_score import SocialMediaScore
-
-
 @tool
-def candiate_assessment_process(candidate_cv_score: CVScore
-                                , candidate_social_score: Optional[SocialMediaScore] | None
+def candiate_assessment_process(candidate_cv_score: CVScore,
+                                candidate_social_score: Optional[SocialMediaScore] | None,
+                                candidate_world_check_score: Optional[WorldCheck] | None
                                 ) -> CandidateFinalScore:
     
     """Generates a final assessment score based on the candidate's CV score and social media screening results.
@@ -47,7 +47,8 @@ def candiate_assessment_process(candidate_cv_score: CVScore
     formatted_user_message = user_prompt.format(
         output_model_structure=CandidateFinalScore.model_json_schema(),
         cv_score=candidate_cv_score,
-        social_media_score=candidate_social_score
+        social_media_score=candidate_social_score,
+        world_check_score=candidate_world_check_score
     )
 
     handler = ChatCompletionHandler()
