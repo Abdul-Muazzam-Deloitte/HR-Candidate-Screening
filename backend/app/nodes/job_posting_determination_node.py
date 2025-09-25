@@ -33,12 +33,7 @@ def job_posting_determination_node(state: CVProcessingState):
         # Validate with Pydantic
         state["messages"].append({"type": "success", "content": "Projects screening completed"})
         
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Job Posting Determination Process", run_id="job_posting_determination", result={"title" : job_description["title"],
-                                                                                                                                                        "department" : job_description["department"],
-                                                                                                                                                        "experience" : job_description["experience"],
-                                                                                                                                                        "description" : job_description["description"],
-                                                                                                                                                        "skills" : job_description["skills"],
-                                                                                                                                                        "requirements" : job_description["requirements"] }))
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Job Posting Determination Process", run_id="job_posting_determination", result=job_description))
         return {"job_description": job_description}
         
     except Exception as e:

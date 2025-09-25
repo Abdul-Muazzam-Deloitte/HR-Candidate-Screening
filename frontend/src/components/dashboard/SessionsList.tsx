@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, Clock, CheckCircle, AlertTriangle, User, UserCheck, FileText, Users, Briefcase, ClipboardCheck, Shield } from 'lucide-react';
 import { useScreening } from '../../contexts/ScreeningContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { ProcessNode } from '../../types';
+import { ProcessNode, ScreeningSession } from '../../types';
 
 export const SessionsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { sessions } = useScreening();
 
-const getStatusColor = (status: string) => {
+const getProcessColor = (status: string) => {
   switch (status) {
     case 'pending':
       return 'bg-gray-100 text-gray-800';
@@ -43,8 +43,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-
-const getStatusIcon = (status: string) => {
+const getProcessIcon = (status: string) => {
   switch (status) {
     case 'pending':
       return <Clock className="w-4 h-4" />;
@@ -77,6 +76,7 @@ const getStatusIcon = (status: string) => {
   }
 };
 
+
   const handleViewSession = (sessionId: string) => {
 
     const session = sessions.find(s => s.id === sessionId);
@@ -88,7 +88,7 @@ const getStatusIcon = (status: string) => {
     }
   };
 
-  const formatStatus = (status: string) => {
+  const formatProcess = (status: string) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -96,7 +96,7 @@ const getStatusIcon = (status: string) => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">
-          {user?.role === 'hr' ? 'Screening Sessions' : 'My Interviews'}
+          {user?.role === 'hr' ? 'Candidates' : 'My Interviews'}
         </h2>
       </div>
 
@@ -111,7 +111,7 @@ const getStatusIcon = (status: string) => {
                 Position
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+                Process Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
@@ -129,10 +129,10 @@ const getStatusIcon = (status: string) => {
             <tr>
               <td colSpan={6} className="px-6 py-12 text-center">
                 <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions yet</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No candidates matched yet</h3>
                 <p className="text-gray-500">
                   {user?.role === 'hr' 
-                    ? 'Upload a CV to start the screening process'
+                    ? 'Upload a CV to start the matching process'
                     : 'No interview sessions available'
                   }
                 </p>
@@ -140,6 +140,7 @@ const getStatusIcon = (status: string) => {
             </tr>
         ) : (
           sessions.map((session) => (
+            
             <tr
               key={session.id}
               className="hover:bg-gray-50 transition-colors"
@@ -170,9 +171,9 @@ const getStatusIcon = (status: string) => {
 
               {/* Status */}
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
-                  {getStatusIcon(session.status)}
-                  <span>{formatStatus(session.status)}</span>
+                <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getProcessColor(session.status)}`}>
+                  {getProcessIcon(session.status)}
+                  <span>{formatProcess(session.status)}</span>
                 </span>
               </td>
 
@@ -181,7 +182,7 @@ const getStatusIcon = (status: string) => {
                 {new Date(session.createdAt).toLocaleDateString()}
               </td>
               
-              {/* Match Score */}
+              {/* Action */}
               <td className="px-6 py-4 whitespace-nowrap">
 
                 {/* {session.processNodes?.length && (
@@ -208,7 +209,7 @@ const getStatusIcon = (status: string) => {
 
               </td>
 
-              {/* Actions */}
+              {/* Buttons */}
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center space-x-2">
                   {session.status === 'question_generation' && user?.role === 'candidate' && (

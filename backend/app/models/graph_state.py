@@ -15,7 +15,7 @@ import operator
 # State definition for the graph
 class CVProcessingState(TypedDict):
     pdf_path: str
-    job_description: JobDescription
+    job_description: List[JobDescription]
     cv_data: Candidate
     cv_score: CVScore
     social_media_score: Optional[SocialMediaScore]

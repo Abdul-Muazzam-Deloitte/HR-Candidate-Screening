@@ -77,44 +77,45 @@ def create_cv_scoring_workflow():
         "landingai_extraction",
         lambda state: "error_handler" if state.get("error") else "job_determination"
     )
-    # Add conditional edges
+
     workflow.add_conditional_edges(
         "job_determination",
-        route_after_extraction
-    )
-
-    workflow.add_conditional_edges(
-        "cv_scoring",
-        lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
-    )
-
-    workflow.add_conditional_edges(
-        "social_media_screening",
-        lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
-    )
-
-    workflow.add_conditional_edges(
-        "project_contribution",
-        lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
-    )
-
-    workflow.add_conditional_edges(
-        "candidate_assessment_score",
-        lambda state: "error_handler" if state.get("error") else "send_candidate_report"
-    )
-        
-    workflow.add_conditional_edges(
-        "send_candidate_report",
-        route_after_scoring
-    )
-
-    workflow.add_conditional_edges(
-        "interview_questions",
         lambda state: "error_handler" if state.get("error") else END
     )
 
+    # # Add conditional edges
+    # workflow.add_conditional_edges(
+    #     "job_determination",
+    #     route_after_extraction
+    # )
+
+    # workflow.add_conditional_edges(
+    #     "cv_scoring",
+    #     lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
+    # )
+
+    # workflow.add_conditional_edges(
+    #     "social_media_screening",
+    #     lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
+    # )
+
+    # workflow.add_conditional_edges(
+    #     "project_contribution",
+    #     lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
+    # )
+
+    # workflow.add_conditional_edges(
+    #     "candidate_assessment_score",
+    #     lambda state: "error_handler" if state.get("error") else "send_candidate_report"
+    # )
+        
     # workflow.add_conditional_edges(
     #     "send_candidate_report",
+    #     route_after_scoring
+    # )
+
+    # workflow.add_conditional_edges(
+    #     "interview_questions",
     #     lambda state: "error_handler" if state.get("error") else END
     # )
 
@@ -136,18 +137,7 @@ async def hr_screening_workflow(pdf_path: str):
 
     initial_state = CVProcessingState(
         pdf_path=pdf_path,
-        job_description=JobDescription(
-            id ="",
-            title="",
-            department="",
-            description="",
-            experience ="",
-            skills = [],
-            requirements = [],
-            createdAt= datetime.now(),
-            updatedAt= datetime.now(),
-            job_postings_vector=""
-        ),
+        job_description=[],
         cv_data=Candidate(
             first_name= "",
             last_name= "",

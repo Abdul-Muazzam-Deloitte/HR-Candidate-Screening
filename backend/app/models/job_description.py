@@ -21,4 +21,5 @@ class JobDescription(JobDescriptionCreate):
     id: str = Field(description="Id of job description")
     createdAt: datetime = Field(description="Timestamp when the job description was created")
     updatedAt: Optional[datetime] = Field(description="Timestamp when the job description was last updated")
-    job_postings_vector: Optional[str] = Field(description="vector of Job posting")
+    job_postings_vector: str = Field(description="Vector of Job posting")
+    # similarity_score: Optional[float] = Field(description="Cosine Similarity Score of job description")

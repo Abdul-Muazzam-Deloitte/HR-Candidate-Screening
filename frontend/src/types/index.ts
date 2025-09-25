@@ -78,7 +78,7 @@ export interface Answer {
 export interface ScreeningSession {
   id: string;
   candidate: Candidate;
-  jobDescription?: JobDescription;
+  jobDescription?: JobDescription[];
   cvFile?: File;
   questions?: ScreeningResult;
   status: 'pending' | 'document_extraction'| 'cv_scoring' | 'social_media_screening' | 'candidate_assessment'| 'report_generation' | 'question_generation' | 'interview_in_progress' | 'interview_completed' | 'evaluated';
@@ -124,22 +124,4 @@ export interface Report {
   content: string;
   generatedAt: Date;
   downloadUrl?: string;
-}
-
-interface ScreeningContextType {
-  sessions: ScreeningSession[];
-  currentSession: ScreeningSession | null;
-  processNodes: ProcessNode[];
-  processSteps: ProcessStep[];
-  reports: Report[];
-  isLoading: boolean;
-  createSession: (candidateData: any, jobDescription: any, cvFile?: File) => Promise<string>;
-  updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
-  updateSessionWithExtractedData: (sessionId: string, extractedData: any) => void;
-  addProcessStep: (step: ProcessStep) => void;
-  updateProcessNode: (nodeId: string, updates: Partial<ProcessNode>) => void;
-  toggleNodeExpansion: (nodeId: string) => void;
-  updateCandidateData: (sessionId: string, candidateData: any) => void;
-  generateReport: (sessionId: string, type: Report['type']) => Promise<void>;
-  setCurrentSession: (sessionId: string | null) => void;
 }

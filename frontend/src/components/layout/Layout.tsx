@@ -14,15 +14,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex h-screen">
-      <div className="flex-1 flex flex-col">
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      {/* Header: fixed at top */}
+      <div className="flex-shrink-0">
         <Header />
-        <div className="flex flex-1">
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar: fixed height to fill remaining viewport below header */}
+        <div className="flex-shrink-0 h-full">
           <Sidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
         </div>
+
+        {/* Main content: scrollable only */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
     </div>
   );

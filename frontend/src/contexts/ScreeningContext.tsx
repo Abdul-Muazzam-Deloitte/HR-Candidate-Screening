@@ -151,9 +151,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
   };
 
   useEffect(() => {
-    console.log("Process nodes updated:", processNodes);
-    console.log(sessionId)
-         setSessions(prev => prev.map(session =>
+    setSessions(prev => prev.map(session =>
     session.id === sessionId
       ? {
           ...session,
@@ -296,20 +294,24 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       createdAt: extractedData.createdAt,
       updatedAt: extractedData.updatedAt,
     };
+    console.log(updatedJobDescription)
 
     // Update sessions array
-    setSessions(prev => prev.map(session => 
-      session.id === sessionId 
-        ? { 
-            ...session, 
-            jobDescription: { 
-              ...session.jobDescription, 
-              ...updatedJobDescription 
-            }, 
-            updatedAt: new Date() 
-          }
-        : session
-    ));
+    setSessions(prev =>
+      prev.map(session =>
+        session.id === sessionId
+          ? {
+              ...session,
+              jobDescription: (session.jobDescription ?? []).map(jd =>
+                jd.id === updatedJobDescription.id
+                  ? { ...jd, ...updatedJobDescription }
+                  : jd
+              ),
+              updatedAt: new Date(),
+            }
+          : session
+      )
+    );
   };
 
   const createSession = async (candidateData: any, cvFile?: File): Promise<ScreeningSession> => {

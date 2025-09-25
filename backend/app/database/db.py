@@ -3,11 +3,12 @@ from fastapi import HTTPException
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
-from app.models.job_description import JobDescriptionCreate
+from app.models.job_description import JobDescriptionCreate, JobDescription
 from app.models.candidate_info import Candidate
 import uuid
 import json
 from app.llm_handler.embedder import OpenAIEmbedder
+from typing import List
 
 load_dotenv(override=True)
 
@@ -45,15 +46,19 @@ def get_world_check_info(candidate_info:  Candidate):
         print(e)
         raise HTTPException(status_code=404, detail="Error connecting to database")
 
-def get_job_postings():
+def get_job_postings() -> List[JobDescription] :
+
     try: 
 
         response = supabase.table("job_postings").select("*").execute()
 
+        job_postings: List[JobDescription] = [
+        JobDescription.model_validate(jd) for jd in response.data]
+
         if not response.data:
             raise HTTPException(status_code=404, detail="No job postings found")
 
-        return response.data
+        return job_postings
 
     except Exception as e:
         print(e)
