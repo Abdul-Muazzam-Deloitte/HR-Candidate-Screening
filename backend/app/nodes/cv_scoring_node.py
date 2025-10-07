@@ -23,13 +23,13 @@ def cv_scoring_node(state: CVProcessingState):
     writer = get_stream_writer()
     writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Candidate CV Scoring Process", run_id="cv_scoring"))
     try:
-        if state.get("error") or (not state.get("cv_data") or not state.get("job_description")):
+        if state.get("error") or (not state.get("candidate_cv_data") or not state.get("job_description")):
             writer(RunErrorEvent(type=EventType.RUN_ERROR, message="cv_scoring - No CV data available for scoring"))
             return {"error": "No CV data available for scoring"}
 
         # Call the async scoring tool with streaming
         score_result_object = score_cv_against_jd.invoke({
-            "cv_data" : state["cv_data"].markdown,
+            "cv_data" : state["candidate_cv_data"].markdown,
             "job_description" : state["job_description"]
         })
 

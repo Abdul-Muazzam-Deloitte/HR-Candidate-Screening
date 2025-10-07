@@ -1,33 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ScreeningSession, ProcessStep, Report, ProcessNode, JobDescription, Question } from '../types';
 import { apiService } from '../services/apiService';
-import { useParams } from 'react-router-dom';
-
-// interface ScreeningContextType {
-//   sessions: ScreeningSession[];
-//   currentSession: ScreeningSession | null;
-//   processNodes: ProcessNode[];
-//   reports: Report[];
-//   createSession: (candidateData: any, jobDescription: any, cvFile?: File) => Promise<string>;
-//   updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
-//   addProcessStep: (step: ProcessStep) => void;
-//   generateReport: (sessionId: string, type: Report['type']) => Promise<void>;
-//   setCurrentSession: (sessionId: string | null) => void;
-//   startCVExtraction: (sessionId: string, cvFile: File) => Promise<void>;
-// }
 
 interface ScreeningContextType {
   sessions: ScreeningSession[];
-  // currentSession?: ScreeningSession;
   processNodes: ProcessNode[];
   reports: any[];
   createSession: (candidate: any, file: File) => Promise<ScreeningSession>;
   updateSession: (sessionId: string, updatedFields: Partial<ScreeningSession>) => void;
   updateSessionStatus: (sessionId: string, status: ScreeningSession['status']) => void;
   extractCVContents: (sessionId: string, cvFile: File) => Promise<void>;
-  // setCurrentSession: (session: any) => void;
   handleWorkflowEvent: (sessionId: string, event: any) => void;
-  // resetCurrentSession: () => void;
 }
 
 const ScreeningContext = createContext<ScreeningContextType | undefined>(undefined);
@@ -51,7 +34,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
   const [sessions, setSessions] = useState<ScreeningSession[]>([]);
   const [sessionId, setSessionId] = useState<string>('');
   const [processNodes, setProcessNodes] = useState<ProcessNode[]>([]);
-  // const [currentSession, setCurrentSessionState] = useState<ScreeningSession>();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -282,6 +264,7 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
 
     const updateJobDescription = (sessionId: string , extractedData: any) => {  
 
+    console.log("Updating Job Description with extracted data:", extractedData);
     // Update the current session's candidate with extracted data
     const updatedJobDescription = {
       id: extractedData.id,
@@ -294,7 +277,6 @@ export const ScreeningProvider: React.FC<ScreeningProviderProps> = ({ children }
       createdAt: extractedData.createdAt,
       updatedAt: extractedData.updatedAt,
     };
-    console.log(updatedJobDescription)
 
     // Update sessions array
     setSessions(prev =>
@@ -397,30 +379,6 @@ const mapInterviewResponseToQuestions = (sessionId: string, backendResponse: any
     
   };
 
-  const generateReport = async (sessionId: string, type: Report['type']) => {
-    const newReport: Report = {
-      id: Date.now().toString(),
-      sessionId,
-      type,
-      content: `Mock ${type} report content for session ${sessionId}`,
-      generatedAt: new Date(),
-      downloadUrl: `/reports/${sessionId}-${type}.pdf`,
-    };
-
-    setReports(prev => [...prev, newReport]);
-  };
-
-  // const setCurrentSession = (sessionId: string) => {
-  //   if (sessionId) {
-  //     const session = sessions.find(s => s.id === sessionId);
-  //     setCurrentSessionState(session);
-  //   }
-  // };
-
-  // const resetCurrentSession = () => {
-  //     setCurrentSessionState(undefined);
-  // };
-
   const value: ScreeningContextType = {
     sessions,
     createSession,
@@ -428,11 +386,8 @@ const mapInterviewResponseToQuestions = (sessionId: string, backendResponse: any
     handleWorkflowEvent,
     extractCVContents,
     updateSessionStatus,
-    // currentSession,
     updateSession,
     reports,
-    // setCurrentSession,
-    // resetCurrentSession
   };
 
   return (

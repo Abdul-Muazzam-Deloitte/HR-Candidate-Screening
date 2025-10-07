@@ -1,7 +1,7 @@
 from langchain.tools import tool
 from langchain.prompts import PromptTemplate
 from app.llm_handler.llm_handler import ChatCompletionHandler
-from app.models.score_result import CVScore
+from app.models.score_result import JobPostingScore
 from app.models.job_description import JobDescription
 
 from ag_ui.core import (
@@ -22,7 +22,7 @@ from langgraph.config import get_stream_writer
 import uuid
 
 @tool
-def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScore:
+def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> JobPostingScore:
     """Score a CV against a job description using an LLM.
 
     Args:
@@ -33,14 +33,14 @@ def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScor
     """  
 
     writer = get_stream_writer()
-    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - cv_scoring - Generating CV score..."))  
+    writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="4 - job_posting_determination - Generating CV score..."))  
     # Load prompt templates
     system_message = open("app/knowledge_base/scoring_process/system_message.txt").read()
     user_message = open("app/knowledge_base/scoring_process/cv_scoring_template.txt").read()
 
     user_prompt = PromptTemplate.from_template(user_message)
     formatted_user_message = user_prompt.format(
-        output_model_structure=CVScore.model_json_schema(),
+        output_model_structure=JobPostingScore.model_json_schema(),
         job_description=job_description.model_dump_json(exclude={"job_postings_vector"}),
         candidate_cv_content=cv_data
     )
@@ -51,11 +51,11 @@ def score_cv_against_jd(cv_data: str, job_description: JobDescription) -> CVScor
     result =  handler.run_chain(
         system_message=system_message,
         user_message=formatted_user_message,
-        output_model=CVScore,
+        output_model=JobPostingScore,
         node_id="cv_scoring"
     )
 
-    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - cv_scoring - Generating CV score completed successfully"))  
+    writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="4 - job_posting_determination - Generating CV score completed successfully"))  
     return result
     
 

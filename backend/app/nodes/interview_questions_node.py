@@ -30,56 +30,54 @@ def interview_questions_node(state: CVProcessingState):
     writer = get_stream_writer()
     writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Questions Generation Process", run_id="question_generation"))
 
-    try:
-            if state.get("error") or (not state.get("cv_data") and not state.get("job_description")): 
-                writer(RunErrorEvent(type=EventType.RUN_ERROR, message="question_generation - No cv data available for interview questions."))
-                return {"error": "No cv data available for interview questions."}
+    # try:
+            # if state.get("error") or (not state.get("candidate_cv_data") and not state.get("job_description")): 
+            #     writer(RunErrorEvent(type=EventType.RUN_ERROR, message="question_generation - No cv data available for interview questions."))
+            #     return {"error": "No cv data available for interview questions."}
             
-            interview_questions_object = generate_interview_questions.invoke({
-                "candidate_cv_content": state["cv_data"].markdown,
-                # "candidate_cv_content": state["cv_data"]["markdown"],
-                "job_description": state["job_description"]
-            })
-
-            if interview_questions_object:
-                 
-                while retries < MAX_RETRIES:
-                    hallucinated = validate_questions_semantically.invoke({
-                        "interview_questions" : interview_questions_object,
-                        "candidate_cv_content" : state["cv_data"].markdown,
-                        # "candidate_cv_content": state["cv_data"]["markdown"],
-                        "job_description" : state["job_description"]
-                    })
-                                                                                
-                    if not hallucinated:
-                        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Questions Generation Process", run_id="question_generation", result=interview_questions_object))
-                        return {"interview_questions" : interview_questions_object}
-                    
-                    hallucinated_questions = [hq['question'] for hq in hallucinated]
-                    interview_questions_object = regenerate_interview_questions.invoke({
-                        "interview_questions": interview_questions_object,
-                        "hallucinated_questions": hallucinated_questions,
-                        "candidate_cv_content": state["cv_data"].markdown,
-                        # "candidate_cv_content": state["cv_data"]["markdown"],
-                        "job_description": state["job_description"]
-                    })
-            
-                    retries += 1
-
-            # Process the generated interview questions
-            state["messages"].append({"type": "success", "content": f"Interview questions generated successfully"})
-
-            # answers = interrupt({
-            #     "type": "candidate_answers",
-            #     "questions": interview_questions_object
+            # interview_questions_object = generate_interview_questions.invoke({
+            #     "candidate_cv_content": state["candidate_cv_data"].markdown,
+            #     # "candidate_cv_content": state["cv_data"]["markdown"],
+            #     "job_description": state["job_description"]
             # })
 
-            # # On resume, answers will be returned here
-            # print(answers)
-    
-            writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Questions Generation Process", run_id="question_generation", result=interview_questions_object))
-            return {"interview_questions" : interview_questions_object}
-    except Exception as e:
-        state["messages"].append({"type": "error", "content": f"Generation of interview questions node failed: {str(e)}"})
-        writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"question_generation - {str(e)}"))
-        return {"error": f"Generation of interview questions node: {str(e)}"}
+            # if interview_questions_object:
+                 
+            #     while retries < MAX_RETRIES:
+            #         hallucinated = validate_questions_semantically.invoke({
+            #             "interview_questions" : interview_questions_object,
+            #             "candidate_cv_content" : state["candidate_cv_data"].markdown,
+            #             # "candidate_cv_content": state["cv_data"]["markdown"],
+            #             "job_description" : state["job_description"]
+            #         })
+                                                                                
+            #         if not hallucinated:
+            #             writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Questions Generation Process", run_id="question_generation", result=interview_questions_object))
+            #             return {"interview_questions" : interview_questions_object}
+                    
+            #         hallucinated_questions = [hq['question'] for hq in hallucinated]
+            #         interview_questions_object = regenerate_interview_questions.invoke({
+            #             "interview_questions": interview_questions_object,
+            #             "hallucinated_questions": hallucinated_questions,
+            #             "candidate_cv_content": state["candidate_cv_data"].markdown,
+            #             # "candidate_cv_content": state["cv_data"]["markdown"],
+            #             "job_description": state["job_description"]
+            #         })
+            
+            #         retries += 1
+
+            # # Process the generated interview questions
+            # state["messages"].append({"type": "success", "content": f"Interview questions generated successfully"})
+
+    answers = interrupt("what is your age?")
+
+    # # On resume, answers will be returned here
+
+
+    writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Questions Generation Process", run_id="question_generation", result= None))
+    print(answers)
+    return {"interview_questions" : answers}
+    # except Exception as e:
+    #     state["messages"].append({"type": "error", "content": f"Generation of interview questions node failed: {str(e)}"})
+    #     writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"question_generation - {str(e)}"))
+    #     return {"error": f"Generation of interview questions node: {str(e)}"}

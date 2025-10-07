@@ -20,7 +20,7 @@ def landingai_extraction_node(state: CVProcessingState):
         dict: Updated state with extracted CV data or error message.
     """
     writer = get_stream_writer()
-    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Document Extraction Process", run_id="document_extraction"))
+    writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Candidate Info Extraction Process", run_id="document_extraction"))
 
     try:
         if not state.get("pdf_path"):
@@ -35,8 +35,8 @@ def landingai_extraction_node(state: CVProcessingState):
                  
         state["messages"].append({"type": "success", "content": "CV extracted successfully with LandingAI"})
 
-        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Document Extraction Process", run_id="document_extraction", result=cv_data_object))
-        return {"cv_data": cv_data_object}
+        writer(RunFinishedEvent(type=EventType.RUN_FINISHED, thread_id="Candidate Info Extraction Process", run_id="document_extraction", result=cv_data_object))
+        return {"candidate_cv_data": cv_data_object}
 
     except Exception as e:
         writer(RunErrorEvent(type=EventType.RUN_ERROR, message=f"document_extraction - {str(e)}"))

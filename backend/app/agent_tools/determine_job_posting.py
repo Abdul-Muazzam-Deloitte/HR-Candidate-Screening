@@ -47,6 +47,7 @@ def determine_job_posting(candidate_cv_data: str,  threshold: float = 0.4):
     writer(StepStartedEvent(type=EventType.STEP_STARTED, step_name="1 - job_posting_determination - Retrieving Job Postings"))  
 
     job_postings = get_all_job_postings()
+    print(job_postings)
 
     writer(StepFinishedEvent(type=EventType.STEP_FINISHED, step_name="1 - job_posting_determination - Job Postings retrieved successfully"))  
 

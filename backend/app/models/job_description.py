@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from app.models.social_media_score import SocialMediaScore
-from app.models.score_result import CVScore
 from typing import List, Optional
 
 class JobDescriptionCreate(BaseModel):

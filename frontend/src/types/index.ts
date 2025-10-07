@@ -90,7 +90,7 @@ export interface ScreeningSession {
   processNodes?: ProcessNode[];
 }
 
-export type Status = "pending" | "in_progress" | "completed" | "failed" | "error";
+export type Status = "pending" | "in_progress" | "completed" | "verify" | "failed" | "error";
 
 export interface ProcessStep {
   id: string;

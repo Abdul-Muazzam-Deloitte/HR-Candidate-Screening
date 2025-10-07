@@ -2,7 +2,7 @@ from app.models.graph_state import CVProcessingState
 from app.models.graph_state import CVProcessingState
 from app.models.candidate_info import Candidate
 from app.models.interview_questions import InterviewQAs
-from app.models.score_result import CVScore, ScoreDetail
+from app.models.score_result import JobScoreDetail, JobPostings
 from app.models.candidate_assessment import CandidateFinalScore
 from app.models.job_description import JobDescription
 from app.models.world_check import WorldCheck
@@ -24,6 +24,7 @@ import uuid
 from langchain_core.runnables import RunnableConfig
 from datetime import datetime
 from pydantic import BaseModel
+from langgraph.types import Command
 
 class DictEvent(BaseEvent, BaseModel):
     type: EventType
@@ -42,7 +43,7 @@ def create_cv_scoring_workflow():
         if state.get("error"):
             return "error_handler"
         # This will trigger both nodes to run in parallel
-        return ("cv_scoring", "social_media_screening", "project_contribution", "world_check")
+        return ("social_media_screening", "project_contribution", "world_check")
     
     # Critical routing after score merging
     def route_after_scoring(state):
@@ -61,7 +62,6 @@ def create_cv_scoring_workflow():
     # Add nodes
     workflow.add_node("landingai_extraction", landingai_extraction_node)
     workflow.add_node("job_determination", job_posting_determination_node)
-    workflow.add_node("cv_scoring", cv_scoring_node)
     workflow.add_node("social_media_screening", social_media_screening_node)
     workflow.add_node("project_contribution", project_contribution_node)
     workflow.add_node("world_check", world_check_node)
@@ -75,22 +75,17 @@ def create_cv_scoring_workflow():
 
     workflow.add_conditional_edges(
         "landingai_extraction",
-        lambda state: "error_handler" if state.get("error") else "job_determination"
+        lambda state: "error_handler" if state.get("error") else "interview_questions"
     )
 
-    workflow.add_conditional_edges(
-        "job_determination",
-        lambda state: "error_handler" if state.get("error") else END
-    )
-
-    # # Add conditional edges
+    # Add conditional edges
     # workflow.add_conditional_edges(
     #     "job_determination",
     #     route_after_extraction
     # )
 
     # workflow.add_conditional_edges(
-    #     "cv_scoring",
+    #     "world_check",
     #     lambda state: "error_handler" if state.get("error") else "candidate_assessment_score"
     # )
 
@@ -106,18 +101,18 @@ def create_cv_scoring_workflow():
 
     # workflow.add_conditional_edges(
     #     "candidate_assessment_score",
-    #     lambda state: "error_handler" if state.get("error") else "send_candidate_report"
+    #     lambda state: "error_handler" if state.get("error") else END
     # )
         
     # workflow.add_conditional_edges(
-    #     "send_candidate_report",
+    #     "candidate_assessment_score",
     #     route_after_scoring
     # )
 
-    # workflow.add_conditional_edges(
-    #     "interview_questions",
-    #     lambda state: "error_handler" if state.get("error") else END
-    # )
+    workflow.add_conditional_edges(
+        "interview_questions",
+        lambda state: "error_handler" if state.get("error") else END
+    )
 
     workflow.add_edge("error_handler", END)
 
@@ -125,7 +120,7 @@ def create_cv_scoring_workflow():
 
 
 
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer)
 
 async def hr_screening_workflow(pdf_path: str):
 
@@ -150,16 +145,7 @@ async def hr_screening_workflow(pdf_path: str):
             social_links=[],
             markdown=""
         ),
-        cv_score=CVScore(
-            technical_skills=ScoreDetail(score=1, notes=""),
-            experience_relevance=ScoreDetail(score=1, notes=""),
-            years_experience=ScoreDetail(score=1, notes=""),
-            project_fit=ScoreDetail(score=1, notes=""),
-            soft_skills=ScoreDetail(score=1, notes=""),
-            education_certifications=ScoreDetail(score=1, notes=""),
-            communication=ScoreDetail(score=1, notes=""),
-            overall_recommendation="Moderate Fit"
-        ),
+        candidate_cv_data=None,
         project_info=None,
         social_media_score=None,
         candidate_final_score=CandidateFinalScore(
@@ -180,7 +166,6 @@ async def hr_screening_workflow(pdf_path: str):
             interview_duration=""
         ),
         world_check=WorldCheck(
-
             nationality_id="",
             passport_id="",
             first_name="",
@@ -201,10 +186,25 @@ async def hr_screening_workflow(pdf_path: str):
         # Stream workflow node updates
         for chunk in workflow_graph.stream(
             initial_state,
-            # config = config,
-            stream_mode= "custom"
+            config = config,
+            stream_mode= ["custom", "values"]
             
         ):
+            print(chunk)
+
+            if isinstance(chunk, dict):
+                event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data=chunk)
+            elif isinstance(chunk, str):
+                event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data={"message": chunk})
+            else:
+                event_to_send = chunk
+
+            yield event_to_send
+
+        print("after interrupt")
+        for chunk in workflow_graph.stream(Command(resume="John"), config, stream_mode= "custom"):
+                        
+            print(chunk)
 
             if isinstance(chunk, dict):
                 event_to_send = DictEvent(type=EventType.TEXT_MESSAGE_CONTENT,data=chunk)

@@ -2,10 +2,10 @@ from langchain.tools import tool
 from langchain.prompts import PromptTemplate
 from app.llm_handler.llm_handler import ChatCompletionHandler
 from app.models.candidate_assessment import CandidateFinalScore
-from app.models.score_result import CVScore
 from app.models.social_media_score import SocialMediaScore
 from app.models.world_check import WorldCheck
-from typing import Optional
+from app.models.score_result import JobPostings
+from typing import Optional, List
 
 from ag_ui.core import (
     RunStartedEvent,
@@ -21,7 +21,7 @@ from ag_ui.core import (
 from langgraph.config import get_stream_writer
 
 @tool
-def candiate_assessment_process(candidate_cv_score: CVScore,
+def candiate_assessment_process(candidate_cv_score: Optional[List[JobPostings]],
                                 candidate_social_score: Optional[SocialMediaScore] | None,
                                 candidate_world_check_score: Optional[WorldCheck] | None
                                 ) -> CandidateFinalScore:

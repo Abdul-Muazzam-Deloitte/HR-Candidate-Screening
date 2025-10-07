@@ -24,13 +24,13 @@ def world_check_node(state: CVProcessingState):
     writer = get_stream_writer()
     writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="World Check Process", run_id="world_check"))
     try:
-        if state.get("error") or  not state.get("cv_data"):
+        if state.get("error") or  not state.get("candidate_cv_data"):
             writer(RunErrorEvent(type=EventType.RUN_ERROR, message="world_check - No candidate info availabe for check."))
             return {"error": "No candidate info availabe for check."}
 
         candidate_world_check_info = candidate_world_check.invoke({
             # "candidate_cv_data": state["cv_data"].markdown,
-            "candidate_cv_data": state["cv_data"]
+            "candidate_cv_data": state["candidate_cv_data"]
         })
 
 

@@ -25,12 +25,12 @@ def candidate_assessment_score_node(state: CVProcessingState):
     writer = get_stream_writer()
     writer(RunStartedEvent(type=EventType.RUN_STARTED, thread_id="Candidate's Final Assessment Process", run_id="candidate_assessment"))
     try:
-        if state.get("error") or not state.get("cv_score"): 
+        if state.get("error") or not state.get("job_postings_matched"): 
             writer(RunErrorEvent(type=EventType.RUN_ERROR, message="candidate_assessment - No scoring available for this candidate."))
             return {"error": "No scoring available for this candidate."}
        
         final_score_object = candiate_assessment_process.invoke({
-            "candidate_cv_score": state["cv_score"],
+            "candidate_cv_score": state["job_postings_matched"],
             "candidate_social_score": None,
             "candidate_world_check_score": state["world_check"]
         })
